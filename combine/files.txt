@@ -1,0 +1,15 @@
+src/main.js
+src/core/reflection.js
+src/core/attributes.js
+src/core/classBuilder.js
+src/core/classProxyObject.js
+src/core/verifiers.js
+src/core/mixins.js
+src/core/errorHandling.js
+src/Attribute.js
+src/Contract.js
+src/Synchronized.js
+src/Event.js
+src/Error.js
+src/Errors.js
+src/EventDispatcher.js

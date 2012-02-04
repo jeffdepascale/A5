@@ -1,6 +1,4 @@
 //A5, Copyright (c) 2011, Jeff dePascale & Brian Sutliffe. http://www.jeffdepascale.com
-//JSON2 http://www.JSON.org/json2.js 2010-11-17
-
 (function( window, undefined ) {(function(){
 	
 	var windowItemList = null,
@@ -87,7 +85,7 @@
 		 * @returns The version number of A5.
 		 */
 		version:function(){
-			return  '0.5.192';
+			return  '0.5.{BUILD_NUMBER}';
 		},
 		/**
 		 * @name buildDate
@@ -95,7 +93,7 @@
 		 * @returns The build date of the release of A5.
 		 */
 		buildDate:function(){
-			return '01/30/12';
+			return '{BUILD_DATE}';
 		},
 		
 		/**
@@ -165,6 +163,8 @@
 		}
 	}
 })();
+
+
 a5.SetNamespace('a5.core.reflection', true, function(){
 	
 	var proxyMethods = {
@@ -189,6 +189,8 @@ a5.SetNamespace('a5.core.reflection', true, function(){
 		setReflection:setReflection
 	}
 });
+
+
 a5.SetNamespace('a5.core.attributes', true, function(){
 	
 	createAttribute = function(scope, args){
@@ -333,6 +335,8 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 		processInstance:processInstance
 	}
 });
+
+
 a5.SetNamespace('a5.core.classBuilder', true, function(){
 	
 	var packageQueue = [],
@@ -852,6 +856,8 @@ a5._a5_processImports = a5.core.classBuilder._a5_processImports;
 a5._a5_verifyPackageQueueEmpty = a5.core.classBuilder._a5_verifyPackageQueueEmpty;
 a5._a5_delayProtoCreation = a5.core.classBuilder._a5_delayProtoCreation;
 a5._a5_createQueuedPrototypes = a5.core.classBuilder._a5_createQueuedPrototypes;
+
+
 /**
  * @name TopLevel
  * @namespace  
@@ -1181,6 +1187,8 @@ a5.SetNamespace('a5.core.classProxyObj',{
 	
 	/**#@-*/
 })
+
+
 a5.SetNamespace('a5.core.verifiers', {
 	namespaceArray:[],
 	validateImplementation:function(pkgObj, obj){
@@ -1294,6 +1302,8 @@ a5.SetNamespace('a5.core.verifiers', {
 		return canCreate ? true : {reason:reason, reasonNM:reasonNM};
 	}
 })
+
+
 a5.SetNamespace('a5.core.mixins', {
 	
 	initializeMixins:function(inst){
@@ -1365,6 +1375,8 @@ a5.SetNamespace('a5.core.mixins', {
 		}
 	}
 })
+
+
 a5.SetNamespace('a5.core.errorHandling', true, function(){
 	
 	var thrownError = null;
@@ -1406,7 +1418,9 @@ a5.SetNamespace('a5.core.errorHandling', true, function(){
  * @name ThrowError
  */
 a5.ThrowError = a5.core.errorHandling.ThrowError;
-a5._a5_getThrownError = a5.core.errorHandling._a5_getThrownError;a5.Package('a5')
+a5._a5_getThrownError = a5.core.errorHandling._a5_getThrownError;
+
+a5.Package('a5')
 
 	.Prototype('Attribute', 'singleton', function(proto, im, Attribute){
 		
@@ -1449,6 +1463,8 @@ a5.Package('a5')
 		AttributeTarget.CLASS = '_a5_attTargClass';
 			
 })	
+
+
 a5.Package('a5')
 
 	.Extends('Attribute')
@@ -1634,6 +1650,8 @@ a5.Package('a5')
 		}
 
 })
+
+
 a5.Package('a5')
 
 	.Extends('Attribute')
@@ -1658,6 +1676,8 @@ a5.Package('a5')
 		}
 		
 });
+
+
 /**
  * @class 
  * @name a5.Event
@@ -1805,6 +1825,8 @@ a5.Package('a5')
 		 */
 		EventPhase.BUBBLING = 3;
 });
+
+
 /**
  * @class 
  * @name a5.Error
@@ -1884,6 +1906,8 @@ a5.Package('a5')
 		  return this.type + ': ' + this.message;
 		}
 })
+
+
 /**
  * @class 
  * @name a5.AssertException
@@ -1915,6 +1939,8 @@ a5.Package('a5')
 		}
 		
 });
+
+
 /**
  * @class The EventDispatcher class defines a prototype object for handling listeners and dispatching events.
  * <br/><b>Abstract</b>
@@ -2158,4 +2184,6 @@ a5.Package("a5")
 		}
 		
 });
+
+
 })(this);

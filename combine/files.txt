@@ -13,3 +13,4 @@ src/Event.js
 src/Error.js
 src/Errors.js
 src/EventDispatcher.js
+src/ErrorDefinitions.js

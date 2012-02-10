@@ -8,7 +8,7 @@ a5.cl.Config({
 });
 
 a5.cl.PluginConfig('a5.cl.testing.Testing', {
-	showConsole:true
+	runTests:true
 })
 
 var app = a5.cl.CreateApplication({

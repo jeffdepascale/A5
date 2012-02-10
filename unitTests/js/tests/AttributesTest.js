@@ -13,7 +13,7 @@ a5.Package('a5.unitTest.tests')
 				//Testing extend
 				a5.Package('a5.unitTest.testClasses.attributes')
 
-					.Import('a5.Contract')
+					.Import('a5.ContractAttribute')
 					.Class('AttrTest1', function(cls, im, ProtoTest){
 						
 						cls.AttrTest1 = function(){

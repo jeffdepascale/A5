@@ -416,7 +416,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 				var obj;
 				for (prop in procObj) {
 					obj = procObj[prop];
-					if (obj.namespace != undefined && retObj[prop] === undefined) retObj[prop] = obj;
+					if (typeof obj === 'function' && obj.namespace != undefined && retObj[prop] === undefined) retObj[prop] = obj;
 				}
 			};
 			

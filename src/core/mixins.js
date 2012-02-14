@@ -10,7 +10,7 @@ a5.SetNamespace('a5.core.mixins', {
 				if(mixinRef[i]._a5_mixinMustExtend !== undefined){
 					for (prop in mixinRef[i]._a5_mixinMustExtend) {
 						cls = mixinRef[i]._a5_mixinMustExtend[prop];
-						if (!inst.doesExtend(a5.GetNamespace(cls)))
+						if (!inst.doesExtend(a5.GetNamespace(cls, inst.imports())))
 							return a5.ThrowError(400, null, {nm:mixinRef[i].namespace()});
 					}
 				}
@@ -47,7 +47,7 @@ a5.SetNamespace('a5.core.mixins', {
 			i, l, mixin;
 			
 		for (i = 0, l = mixins.length; i < l; i++) {
-			mixin = a5.GetNamespace(mixins[i], imports);
+			mixin = a5.GetNamespace(mixins[i], imports());
 			mixinInsts.push(mixin);
 			for (i = 0; i < sourceObj.constructor._mixinRef.length; i++)
 				if (sourceObj.constructor._mixinRef[i] === mixin)

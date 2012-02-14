@@ -897,6 +897,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 						sclConst.apply(scope, args);
 					else a5.ThrowError(211, null, {nm:this._a5_superclass.className()});
 				} else {
+					debugger;
 					a5.ThrowError(212, null, {nm:this.namespace()});
 				}
 			} else

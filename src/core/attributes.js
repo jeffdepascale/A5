@@ -20,9 +20,17 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 					var isError = false;
 					if(t !== 'string'){
 						if(t === 'function'){
-							if(!t.isA5 || !attr.doesExtend(a5.Attribute))
+							if(!attr.isA5 || !attr.doesExtend(a5.Attribute))
 								isError = true;
 						} else
+							isError = true;
+					} else {
+						var cls = a5.GetNamespace(attr, scope.imports());
+						if(!cls)
+							cls = a5.GetNamespace(attr + 'Attribute', scope.imports());
+						if(cls)
+							attrDef[j] = cls;
+						else
 							isError = true;
 					}
 					if(isError)
@@ -34,8 +42,14 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 				//validate all arrays, length at least one, first is string, all remaining are objects, not arrays
 			}
 		}
-		for (i = 0, l = attributes.length; i < l; i++)
-			attrObj[attributes[i].shift()] = attributes[i];
+		for (i = 0, l = attributes.length; i < l; i++) {
+			var arr = attributes[i],
+				vals = [];
+			for(var j = 1, k = arr.length; j<k; j++)
+				vals.push(arr[j]);
+			attributes[i] = [arr[0], vals];
+			attrObj[arr[0].className()] = vals;
+		}
 			
 		var proxyFunc = function(){
 			var callOriginator,
@@ -48,28 +62,11 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 				method[prop] = proxyFunc[prop];
 			if (proxyFunc.caller.getClassInstance !== undefined)
 				callOriginator = proxyFunc.caller;
-			for(prop in attrObj){
-				var cls, clsInst, props;
-				switch(typeof prop){
-					case 'string':
-						cls = a5.GetNamespace(prop, scope.imports());
-						if(!cls)
-							cls = a5.GetNamespace(prop + 'Attribute', scope.imports());
-						break;
-					case 'function':
-						cls = prop;
-						break;
-					default:
-						//throw error
-						return;
-				}
-				if(!cls){
-					return a5.ThrowError(309, null, {prop:prop});
-				} else {
-					clsInst = cls.instance(true);
-					props = attrObj[prop];
-					attrClasses.push({cls:clsInst, props:props});
-				}
+			for(var i = 0, l = attributes.length; i<l; i++){
+				var cls = attributes[i][0],
+					clsInst = cls.instance(true),
+					props = attributes[i][1];
+				attrClasses.push({cls:clsInst, props:props});
 			}
 			
 			var processCB = function(args, isPost){
@@ -123,7 +120,7 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 			preRet = processAttribute(count, Array.prototype.slice.call(arguments));
 			return preRet;
 		}
-		proxyFunc._a5_attributes = attributes;
+		proxyFunc._a5_attributes = attrObj;
 		return proxyFunc;
 	},
 	

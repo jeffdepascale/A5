@@ -8,7 +8,6 @@ src/core/mixins.js
 src/core/errorHandling.js
 src/Attribute.js
 src/Contract.js
-src/Synchronized.js
 src/Event.js
 src/Error.js
 src/Errors.js

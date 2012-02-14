@@ -1,15 +1,18 @@
 
 a5.cl.Config({
-	clientEnvironmentOverrides:true,
 	dependencies: [
+		'js/lib/CLUnitTest.js',
 		'js/tests/CoreTest.js',
-		'js/tests/AttributesTest.js'
+		'js/tests/AttributesTest.js',
+		'js/tests/EnumTest.js',
+		'js/tests/MixinTest.js',
+		'js/tests/ErrorTest.js',
+		'js/tests/EventTest.js',
+		'js/tests/InterfaceTest.js',
+		'js/tests/MethodChangerTest.js',
+		'js/tests/ReflectionTest.js'
 	]
 });
-
-a5.cl.PluginConfig('a5.cl.testing.Testing', {
-	runTests:true
-})
 
 var app = a5.cl.CreateApplication({
 	applicationPackage: 'a5.unitTest'

@@ -6,7 +6,7 @@
 a5.SetNamespace('a5.core.classProxyObj',{
 	
 	construct:{
-		classPackage:function(){ return this._a5_pkg; },
+		classPackage:function(getObj){ return getObj ? a5.GetNamespace(this._a5_pkg, null, true) : this._a5_pkg; },
 		className:function(){ return this._a5_clsName; },
 		namespace:function(){return this._a5_namespace; },
 		imports:function(){ return this._a5_imports ? this._a5_imports():{}; },
@@ -31,10 +31,12 @@ a5.SetNamespace('a5.core.classProxyObj',{
 					if (sclConst) 
 						sclConst.apply(scope, args);
 					else a5.ThrowError(211, null, {nm:this._a5_superclass.className()});
-				} else
+				} else {
 					a5.ThrowError(212, null, {nm:this.namespace()});
-			} else
+				}	
+			} else {
 				return this._a5_superclass.prototype;
+			}	
 		},
 		instanceCount:function(){ return this._instanceCount; },
 		isInterface:function(){ return this._a5_isInterface; },
@@ -80,11 +82,6 @@ a5.SetNamespace('a5.core.classProxyObj',{
 				return GetNamespace(namespace, this.imports());
 			else
 				return this.constructor._a5_mixedMethods;
-		},
-		
-		requires:function(cls){
-			if(!a5.GetNamespace(cls))
-				return a5.ThrowError(219, null, {currClass:this.namespace(), checkedClass:cls});
 		},
 		
 		mix:function(cls){

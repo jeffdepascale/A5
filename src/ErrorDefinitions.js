@@ -31,7 +31,6 @@ a5.SetNamespace('a5.ErrorDefinitions', {
 	303:'Attribute error: First parameter must be a reference to a class that extends a5.Attribute.',
 	304:'Attribute error: invalid parameter specified for Attribute, params must be key/value pair objects.',
 	308:'Error processing attribute "{prop}", "{method}" must return a value.',
-	309:'Error processing attribute "{prop}", Attribute class definition not found.',
 	
 	//400: mixins
 	400:'invalid scope argument passed to superclass constructor on class "{nm}".',
@@ -40,7 +39,5 @@ a5.SetNamespace('a5.ErrorDefinitions', {
 	403:'Invalid mixin: Method "{method}" defined by more than one specified mixin.',
 	
 	//600: Contract
-	
-	//625: Synchronized
-	625:'Synchronized error: attempted to use method "{methodName}" on object "{nm}" when currently in use.'
+	601:'Invalid implementation of Contract on interace {intNM} in class {implNM} for method {method}.'
 })

@@ -26,7 +26,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		}catch (e){
 			return a5.ThrowError(209, null, {nm:typeof classRef === 'string' ? classRef:(classRef.namespace ? classRef.namespace():''), errorStr:e});
 		}
-		if (ref._a5_clsDef)
+		if (ref._a5_clsDef) 
 			processDeclaration(ref._a5_clsDef, retObj, retObj, ref.imports(), ref)
 		//else
 			//TODO: throw error, invalid class declaration
@@ -57,10 +57,10 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 			if (({}).hasOwnProperty.call(obj, prop) && typeof obj[prop] === 'function' && a5.core.classProxyObj[prop] === undefined) {
 				if (prop === obj.className()) {
 					obj.constructor._a5_instanceConst = obj[prop];
-					a5.core.reflection.setReflection(scope, obj, prop, obj.constructor._a5_instanceConst);
+					a5.core.reflection.setReflection(stRef, obj, prop, obj.constructor._a5_instanceConst);
 					delete obj[prop];
 				} else {
-					a5.core.reflection.setReflection(scope, obj, prop);
+					a5.core.reflection.setReflection(stRef, obj, prop);
 				}
 			}
 		}
@@ -81,13 +81,14 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		for(prop in obj){
 			if(obj.hasOwnProperty(prop)){
 				if (prop !== 'Final' && prop !== 'Override' && prop !== 'constructor' && prop !== 'prototype' && prop !== 'dealloc' && prop !== '_a5_initialized') {
-					if (sc[prop] !== undefined) {
+					if (sc[prop] !== undefined && sc[prop].toString().indexOf('[native code]') === -1){
+						if(sc[prop].Final == true)
+							return a5.ThrowError(201, null, {prop:prop, namespace:obj.namespace()});
+						//TODO: remove override deprecation tracking
 						deprecationErrors += (obj.namespace() + ' ' + prop + ' need call override\n');
 						count++;
-						//a5.ThrowError(200, null, {prop:prop, namespace:obj.namespace()});
-						//return;
-					} else  if (sc[prop] && sc[prop].Final == true)
-						return a5.ThrowError(201, null, {prop:prop, namespace:obj.namespace()});
+						return a5.ThrowError(200, null, {prop:prop, namespace:obj.namespace()});
+					}
 				}
 			}
 		}
@@ -351,19 +352,20 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 					values.push(value);
 				}
 			})
-			for(i = 0, l = values.length; i<l; i++)
-				obj[values[i]] = index + i;
-				obj.addValue = function(value){
-					if(obj[value] === undefined)
-						obj[value] = value;
-				}
-				obj.getValue = function(id){
-					for(prop in obj)
-						if(obj[prop] === id)
-							return prop;
-					return null;
-				}
+			
+			for (i = 0, l = values.length; i < l; i++)
+				obj[values[i]] = index++;
 				
+			obj.addValue = function(value){
+				if (obj[value] === undefined) 
+					obj[value] = index++;
+			}
+			obj.getValue = function(id){
+				for (prop in obj) 
+					if (obj[prop] === id) 
+						return prop;
+				return null;
+			}
 		}
 		if (pkgObj.isInterface) {
 			obj.interfaceVals = {};

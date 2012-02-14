@@ -1,78 +1,105 @@
 a5.Package('a5.unitTest.tests')
 
-	.Extends('a5.cl.testing.CLUnitTest')
-	.Class('CoreTest', function(self, im){
+	.Extends('a5.cl.CLUnitTest')
+	.Class('CoreTest', function(cls, im){
 		
-		self.CoreTest = function(){
-			self.superclass(this);
+		cls.CoreTest = function(){
+			cls.superclass(this);
 		}		
 		
-		self.runTest = function(){
-			try{
-				self.log("Testing Prototype...");
-				self.log("Testing generic class...");
+		cls.Override.runTest = function(){
+			cls.log('Testing core class qualifier methods...');
+			cls.assert(cls.namespace() === 'a5.unitTest.tests.CoreTest', 'namespace failure');
+			
+			cls.log("Testing Prototype...");
+			
+			//GENERIC CLASS
+			cls.log("Testing generic class...");
+			
+			a5.Package('a5.unitTest.testClasses')
 				
-				
-				a5.Package('a5.unitTest.testClasses')
+				.Prototype('ProtoTest', function(proto, im, ProtoTest){
 					
-					.Prototype('ProtoTest', function(proto, im, ProtoTest){
-						
-						proto.ProtoTest = function(){
-						}
+					proto.ProtoTest = function(){
+					}
+				
+			})
+			cls.create(a5.unitTest.testClasses.ProtoTest);
+			
+			
+			
+			//EXTENDS
+			cls.log("Testing extends...");
+
+			a5.Package('a5.unitTest.testClasses')
+				
+				.Extends('a5.cl.CLBase')
+				.Prototype('ProtoTest2', function(proto, im, ProtoTest){
 					
-				})
+					proto.ProtoTest2 = function(){
+						proto.superclass(this);
+					}
 				
-				self.create(a5.unitTest.testClasses.ProtoTest);
+			})
+			cls.create(a5.unitTest.testClasses.ProtoTest2);
+			
+			
+			//IMPORTS
+			cls.log("Testing imports...");
+			a5.Package('a5.unitTest.testClasses')
 				
-				self.log("Testing extends...");
-				
-				a5.Package('a5.unitTest.testClasses')
+				.Import('a5.cl.*')
+				.Prototype('ProtoTest3', function(proto, im, ProtoTest){
 					
-					.Extends('a5.cl.CLBase')
-					.Prototype('ProtoTest2', function(proto, im, ProtoTest){
-						
-						proto.ProtoTest2 = function(){
-							proto.superclass(this);
-						}
+					proto.ProtoTest3 = function(){
+						cls.assert(im.CLBase === a5.cl.CLBase, 'Import test 1 failed')
+					}
+				
+			})
+			cls.create(a5.unitTest.testClasses.ProtoTest3);
+			
+			
+			//CONSTRUCTORS
+			cls.log('Testing constructors...');
+			
+			a5.Package('a5.unitTest.testClasses')
+				
+				.Prototype('ProtoTest4', function(proto, im, ProtoTest){
 					
-				})
-				self.create(a5.unitTest.testClasses.ProtoTest2);
+					proto.ProtoTest4 = function(){
+						proto.superclass(this);
+					}
 				
-				
-				self.log("Testing imports...");
-				a5.Package('a5.unitTest.testClasses')
-					
-					.Import('a5.cl.*')
-					.Prototype('ProtoTest3', function(proto, im, ProtoTest){
-						
-						proto.ProtoTest3 = function(){
-							//self.assert(im.CLBase === a5.cl.CLBase, 'Import test 1 failed')
-						}
-					
-				})
-				
-				self.create(a5.unitTest.testClasses.ProtoTest3);
-				
-				self.log('Prototype tests complete.');
-				
-				self.log("Testing Class...");
-				
-				a5.Package('a5.unitTest.testClasses')
-					.Class('ClassTest1', function(cls, im, ClassTest1){
-					
-						cls.ClassTest1 = function(){
-							
-						}						
-				});
-				
-				self.create(a5.unitTest.testClasses.ClassTest1);
-				
-				self.log('Class tests complete.');
+			})
+			
+			try {
+				cls.create(a5.unitTest.testClasses.ProtoTest4);
 			} catch(e){
-				self.error(e);
+				cls.assert(e.message.indexOf('superclass') !== -1, "Invalid superclass call not found");
 			}
 			
-			this.testComplete();
+			
+			
+			
+			
+			
+			
+			
+			cls.log('Prototype tests complete.');
+			
+			cls.log("Testing Class...");
+			
+			a5.Package('a5.unitTest.testClasses')
+				.Class('ClassTest1', function(cls, im, ClassTest1){
+				
+					cls.ClassTest1 = function(){
+						
+					}						
+			});
+			
+			cls.create(a5.unitTest.testClasses.ClassTest1);
+			
+			cls.log('Class tests complete.');
 		}
 
 })

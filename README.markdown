@@ -1,4 +1,5 @@
-A5 - OOP/AOP Language Enhancement pack for JavaScript
+![Test Pilot One Eleven](http://testpilot111.com/images/logo_black.png)
+![A5](http://testpilot111.com/images/A5_logo_bevel_70.png) - OOP/AOP Language Enhancement pack for JavaScript
 
 Licensed under GPL-3.0
 

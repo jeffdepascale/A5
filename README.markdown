@@ -1,6 +1,10 @@
-![Test Pilot One Eleven](http://testpilot111.com/images/logo_black.png)
+![Test Pilot One Eleven](http://testpilot111.com/images/logo_black_250.png)
 
-![A5](http://testpilot111.com/images/A5_logo_bevel_70.png) - OOP/AOP Language Enhancement pack for JavaScript
+
+![A5](http://testpilot111.com/images/A5_logo_bevel_70.png) 
+
+
+A5 - OOP/AOP Language Enhancement pack for JavaScript
 
 Licensed under GPL-3.0
 

@@ -41,6 +41,7 @@ Validated on:
  Quick tutorial: Hello World
  
 '''javascript
+
  a5.Package('sampleApp')
  
  	.Class('HelloWorld', function(cls){
@@ -51,4 +52,5 @@ Validated on:
  })
  
  a5.Create(sampleApp.HelloWorld);
+ 
 '''

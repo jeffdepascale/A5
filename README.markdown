@@ -40,17 +40,17 @@ Validated on:
  
  Quick tutorial: Hello World
  
-'''javascript
+```javascript
 
- a5.Package('sampleApp')
+a5.Package('sampleApp')
+
+	.Class('HelloWorld', function(cls){
+		
+		cls.HelloWorld = function(){
+			alert('Hello World!');
+		}
+})
+
+a5.Create(sampleApp.HelloWorld);
  
- 	.Class('HelloWorld', function(cls){
- 		
- 		cls.HelloWorld = function(){
- 			alert('Hello World!');
- 		}
- })
- 
- a5.Create(sampleApp.HelloWorld);
- 
-'''
+```

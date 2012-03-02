@@ -99,6 +99,24 @@ a5.Package('a5.unitTest.tests')
 			
 			cls.create(a5.unitTest.testClasses.ClassTest1);
 			
+			
+			a5.Package('a5.unitTest.testClasses')
+				.Class('SingletonTest', 'singleton', function(cls){
+					
+					cls.SingletonTest = function(){
+						
+					}
+			})
+			var singletonFailed = false;
+			cls.create(a5.unitTest.testClasses.SingletonTest);
+			try{
+				cls.create(a5.unitTest.testClasses.SingletonTest);
+			}catch(e){
+				if(e.message.indexOf('singleton') !== -1)
+					singletonFailed = true;
+			}
+			
+			cls.assert(singletonFailed, 'Singleton test failure');
 			cls.log('Class tests complete.');
 		}
 

@@ -56,6 +56,10 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		isA5:true,
 		isA5ClassDef:function(){ return false },
 		
+		getStatic:function(){
+			return this.constructor;
+		},
+		
 		autoRelease:function(value){
 			if(value !== undefined){
 				var id = new Date().getTime(),

@@ -10,8 +10,8 @@ a5.SetNamespace('a5.cl');
  * @type a5.cl.CL
  * @returns Shortcut to the instance of the A5 CL application.
  */
-a5.cl.instance = function(val){
-	return a5.cl.CL.instance(val);
+a5.cl.instance = function(){
+	return a5.cl.CL.instance();
 }
 
 /**
@@ -27,24 +27,25 @@ a5.cl.instance = function(val){
  * @type Function
  * @returns A function that returns the singleton instance of the application framework.
  */
-a5.cl.CreateApplication = function(props){
-	if (!a5.cl._cl_appCreated) {
-		var props = (props === undefined ? undefined:((typeof props === 'object') ? props : {applicationPackage:props}));
-		var initialized = false;
-		var onDomReady = function(){
-			if (!props) {
-				var str = 'CreateApplication requires at least one parameter:\n\na5.cl.CreateApplication("app");';
+a5.cl.CreateApplication = function(props, callback){
+	if (!a5.cl.instance()) {
+		if(typeof props === 'function'){
+			callback = props;
+			props = undefined;
+		}
+		props = (props === undefined ? {}:((typeof props === 'object') ? props : {applicationPackage:props}));
+		if(callback && typeof callback === 'function')
+			a5.CreateCallback(callback);
+		
+		var initialized = false,
+
+		onDomReady = function(){
+			if (!props && a5.cl.CLMain._extenderRef.length === 0) {
+				var str = 'CreateApplication requires at least one parameter:\n\na5.cl.CreateApplication("app"); or a class that extends a5.cl.CLMain.';
 				a5.cl.core.Utils.generateSystemHTMLTemplate(500, str, true);
 				throw str;
 			} else {
 				if (!initialized) {
-					a5.cl._cl_appCreated = true;
-					a5.cl.Mappings = a5.cl.Filters = 
-					a5.cl.AppParams = a5.cl.Config = 
-					a5.cl.CreateCallback =
-					a5.cl.BootStrap = function(){
-						a5.cl.core.Utils.generateSystemHTMLTemplate(500, "Invalid call to CL configuration method: methods must be called prior to application launch", true);
-					}
 					a5.Create(a5.cl.CL, [props])
 					initialized = true;
 					for(var i = 0, l = a5.cl._cl_createCallbacks.length; i<l; i++)
@@ -52,9 +53,9 @@ a5.cl.CreateApplication = function(props){
 					a5.cl._cl_createCallbacks = null;
 				}
 			}
-		}
+		},
 	
-		var domContentLoaded = function(){
+		domContentLoaded = function(){
 			if (document.addEventListener) {
 				document.removeEventListener( "DOMContentLoaded", domContentLoaded, false);
 				onDomReady();
@@ -81,51 +82,12 @@ a5.cl.CreateApplication = function(props){
 	}
 }
 
-a5.cl._cl_appCreated = false;
-
-a5.cl._cl_storedCfgs = { mappings:[], filters:[], config:[], appParams:{}, pluginConfigs:[], bootStrap:null };
-
 a5.cl._cl_createCallbacks = [];
 
 a5.cl.CreateCallback = function(callback){
 	a5.cl._cl_createCallbacks.push(callback);
 }
-/**
- * 
- * @param {Array} array
- */
-a5.cl.Mappings = function(array){ a5.cl._cl_storedCfgs.mappings = array; }
 
-/**
- * 
- * @param {Array} array
- */
-a5.cl.Filters = function(array){ a5.cl._cl_storedCfgs.filters = array; }
-
-/**
- * 
- * @param {Object} obj
- */
-a5.cl.AppParams = function(obj){ a5.cl._cl_storedCfgs.appParams = obj; }
-
-/**
- * 
- * @param {Object} obj
- */
-a5.cl.Config = function(obj){ a5.cl._cl_storedCfgs.config = obj; }
-
-/**
- * 
- * @param {string} namespace
- * @param {Object} obj
- */
-a5.cl.PluginConfig = function(namespace, obj){ a5.cl._cl_storedCfgs.pluginConfigs.push({nm:namespace, obj:obj}); }
-
-/**
- * 
- * @param {Function} func
- */
-a5.cl.BootStrap = function(func){ a5.cl._cl_storedCfgs.bootStrap = func; }
 
 
 
@@ -151,16 +113,6 @@ a5.Package('a5.cl')
 		proto.CLBase = function(){
 			proto.superclass(this);
 		}
-		
-		/**
-		 * Returns the name value of the class if known, else it returns the instanceUID value.
-		 * @name mvcName
-		 * @type String
-		 */
-		proto.mvcName = function(){
-			return this._cl_mvcName || this.instanceUID();
-		}
-		
 		
 		/**
 		 * @name cl
@@ -202,32 +154,6 @@ a5.Package('a5.cl')
 					console.warn.apply(console, arguments);
 		}
 		
-		/**
-		 * The redirect method throws a control change to A5 CL.
-		 * @name redirect
-		 * @param {Object|String|Array|Number} params Numbers are explicitly parsed as errors. String parsed as location redirect if is a url, otherwise processed as a hash change.
-		 * @param {String|Array} [param.hash] A string value to pass as a hash change. 
-		 * @param {String} [param.url] A string value to pass as a location redirect. 
-		 * @param {String} [param.controller] A string value referencing the name of a controller to throw control to, defaulting to the index method of the controller. 
-		 * @param {String} [param.action] A string value of the name of the method action to call. 
-		 * @param {Array} [param.id] An array of parameters to pass to the action method. 
-		 * @param {String|Array} [param.forceHash] A string to set the hash value to. Note that unlike standard hash changes, forceHash will not be parsed as a mappings change and is strictly for allowing finer control over the address bar value.
-		 * @param {String} [info] For errors only, a second parameter info is used to pass custom error info to the error controller. 
-		 */
-		proto.redirect = function(params, info, forceRedirect){
-			if(this.cl()._core().locationManager()){
-				return this.cl()._core().locationManager().redirect(params, info, forceRedirect);
-			} else {
-				if(params === 500){
-					var isError = info instanceof a5.Error;
-					if(isError && !info.isWindowError())
-						this.throwError(info);
-					else
-						throw info;
-				}
-			}
-		}
-		
 		proto.Override.throwError = function(error){
 			proto.superclass().throwError(error, a5.cl.CLError);
 		}
@@ -253,10 +179,6 @@ a5.Package('a5.cl')
 		 */
 		proto.appParams = function(){
 			return this.cl().appParams();
-		}
-		
-		proto._cl_setMVCName = function(name){
-			this._cl_mvcName = name;
 		}
 });
 
@@ -295,7 +217,7 @@ a5.Package('a5.cl')
 		proto.CLWorker = function(isWorker){
 			proto.superclass(this);
 			if(this.isSingleton())
-				this.redirect(500, "Workers cannot be singletons.");
+				this.throwError("Workers cannot be singletons.");
 			this._cl_communicator = null;
 			this._cl_JSON = a5.cl.core.JSON || JSON;
 			this._cl_isWorker = (isWorker === '_cl_isWorkerInitializer');
@@ -330,7 +252,7 @@ a5.Package('a5.cl')
 					if (obj.log) {
 						self.log(obj.log);
 					} else if (obj.error) {
-						self.redirect(500, obj.error);
+						self.throwError(obj.error);
 					} else {
 						var method = null;
 						try {
@@ -374,7 +296,7 @@ a5.Package('a5.cl')
 					data: data
 				});
 			} else {
-				self.redirect(500, 'Cannot call createWorker from worker methods.');
+				self.throwError('Cannot call createWorker from worker methods.');
 			}
 		}
 		
@@ -730,9 +652,6 @@ a5.Package('a5.cl.core')
 				plugins[i].initializePlugin();
 					
 			}
-			a5.cl.PluginConfig = function(){
-				self.throwError(self.create(a5.cl.CLError, ['Invalid call to MVC pluginConfig method: method must be called prior to plugin load.']));
-			}
 		}
 		
 		this.defineRegisterableProcess = function(process){
@@ -756,7 +675,7 @@ a5.Package('a5.cl.core')
 		this.processAddons = function(callback){
 			var count = 0,
 			processAddon = function(){
-				if (count >= addOns.length - 1) {
+				if (count >= addOns.length) {
 					callback();
 				} else {
 					var addOn = addOns[count].instance(),
@@ -1028,14 +947,12 @@ a5.Package('a5.cl.core')
 		this.Override.getClassInstance = function(type, className, instantiate){
 			var instance = null,
 			namespace = null;
-			try{
-				if(className.indexOf('.') !== -1)
-					namespace = a5.GetNamespace(className);
-				else 
-					namespace = getClassNamespace(type, className);
-				if(namespace)
-					instance = namespace.instance(!!instantiate);
-			}catch(e){}
+			if(className.indexOf('.') !== -1)
+				namespace = a5.GetNamespace(className);
+			else 
+				namespace = getClassNamespace(type, className);
+			if(namespace)
+				instance = namespace.instance(!!instantiate);
 			return instance;
 		}
 		
@@ -1054,8 +971,8 @@ a5.Package('a5.cl.core')
 		}
 		
 		this.instantiateConfiguration = function(){
-			var retObj = a5.cl._cl_storedCfgs.config;
-			var plgnArray = a5.cl._cl_storedCfgs.pluginConfigs;
+			var retObj = a5.cl.CLMain._cl_storedCfgs.config;
+			var plgnArray = a5.cl.CLMain._cl_storedCfgs.pluginConfigs;
 			for (var i = 0; i < plgnArray.length; i++) {
 				var obj = {};
 				var split = plgnArray[i].nm.split('.'),
@@ -2855,6 +2772,108 @@ a5.Package('a5.cl.mixins')
 });	
 
 
+a5.Package('a5.cl.mixins')
+	.Mixin('BindableSource', function(mixin, im){
+		
+		mixin.BindableSource = function(){
+			this._cl_receivers = [];
+			this._cl_paramType = null;
+			this._cl_paramRequired = false;
+		}
+		
+		mixin.paramType = function(type){
+			if (type) {
+				this._cl_paramType = type;
+				return this;
+			}
+			return this._cl_paramType;
+		}
+		
+		mixin.paramRequired = function(value){
+			if (value) {
+				this._cl_paramRequired = value;
+				return this;
+			}
+			return this._cl_paramRequired;
+		}
+		
+		mixin.updateBinds = function(data){
+			this.notifyReceivers(data);
+		}
+		
+		mixin.attachReceiver = function(receiver, params, mapping, scope){
+			this._cl_receivers.push({receiver:receiver, params:params, mapping:mapping, scope:scope});
+			this.updateBinds();
+		}
+		
+		mixin.notifyReceivers = function(data){
+			if (this._cl_paramRequired === true) {
+				this.throwError('cannot call notifyReceivers on mixed class "' + this.namespace() + '", paramRequired bind sources must call notifyFromParams.');
+			} else {
+				for (var i = 0, l = this._cl_receivers.length; i < l; i++) {
+					var r = this._cl_receivers[i];
+					r.receiver.call(r.scope, this._cl_modifyBindData(data, r.mapping))
+				}
+			}
+		}
+		
+		mixin.notifyFromParams = function(callback){
+			for (var i = 0, l = this._cl_receivers.length; i < l; i++) {
+				var r = this._cl_receivers[i];
+				var result = callback(r.params);
+				if(result !== null)
+					r.receiver.call(r.scope, this._cl_modifyBindData(result, r.mapping));
+			}
+		}
+		
+		mixin.detachReceiver = function(receiver){
+			for(var i = 0, l = this._cl_receivers.length; i<l; i++){
+				var r = this._cl_receivers[i];
+				if(r.receiver === receiver){
+					this._cl_receivers.splice(i, 1);
+					break;
+				}
+			}
+		}
+		
+		mixin._cl_modifyBindData = function(dataSource, mapping){
+			var data,
+				isQuery = false;
+			if(dataSource instanceof a5.cl.CLQueryResult)
+				isQuery = true;
+			if(isQuery)
+				data = dataSource._cl_data;
+			else 
+				data = dataSource;
+			if(mapping){
+				var dataSet = [],
+					skipProps = {};
+				for (var i = 0, l = data.length; i < l; i++) {
+					var dataRow = {};
+					for (var prop in mapping) {
+						dataRow[prop] = data[i][mapping[prop]];
+						skipProps[mapping[prop]] = prop;
+					}
+					for(var prop in data[i])
+						if(skipProps[prop] === undefined)
+							dataRow[prop] = data[i][prop];
+					dataSet.push(dataRow);
+				}
+				if (isQuery) {
+					dataSource._cl_data = dataSet;
+					return dataSource;
+				} else {
+					return dataSet;
+				}
+			} else {
+				return dataSource;
+			}
+		}
+				
+});
+
+
+
 /**
  * @class Base class for service handlers in the AirFrame CL framework.
  * <br/><b>Abstract</b>
@@ -3243,13 +3262,13 @@ a5.Package('a5.cl')
 		}
 		
 		proto._cl_sourceConfig = function(){
-			var cfg = a5.cl._cl_storedCfgs.pluginConfigs;
+			var cfg = a5.cl.CLMain._cl_storedCfgs.pluginConfigs;
 			var pkg = this.classPackage();
 			if(String(pkg[pkg.length-1]).toLowerCase() != this.className().toLowerCase())
 						pkg = pkg + '.' + this.constructor.className();
 			for (var prop in cfg){
 				var pluginCfg = cfg[prop];
-				 if(pluginCfg.nm && pluginCfg.nm == pkg)
+				 if(pluginCfg.nm && (pluginCfg.nm === pkg || pluginCfg.nm === this.constructor.className()))
 				 	return pluginCfg.obj;
 			}
 			return {};
@@ -3287,6 +3306,16 @@ a5.Package('a5.cl')
 			return false;
 		}
 		
+		proto.createMainConfigMethod = function(type){
+			a5.cl.CLMain.prototype['set' + type.substr(0, 1).toUpperCase() + type.substr(1)] = function(){
+				a5.cl.CLMain._cl_storedCfgs[type] = Array.prototype.slice.call(arguments);
+			}
+		}
+		
+		proto.getMainConfigProps = function(type){
+			return a5.cl.CLMain._cl_storedCfgs[type];
+		}
+		
 		proto.registerAutoInstantiate = function(){
 			a5.cl.core.Instantiator.instance().registerAutoInstantiate.apply(null, arguments);
 		}
@@ -3309,6 +3338,7 @@ a5.Package("a5.cl")
 	
 		var _params,
 			_config,
+			_main,
 			core;
 		
 		this._cl_plugins = {};
@@ -3316,6 +3346,10 @@ a5.Package("a5.cl")
 		this.CL = function(params){
 			self.superclass(this);
 			_params = params;
+			if(a5.cl.CLMain._extenderRef.length)
+				_main = self.create(a5.cl.CLMain._extenderRef[0], [self]);
+			if(!params.applicationPackage)
+				params.applicationPackage = _main.classPackage();
 			core = self.create(a5.cl.core.Core, [params.applicationPackage]);
 			_config = a5.cl.core.Utils.mergeObject(core.instantiator().instantiateConfiguration(), params);
 			_config = core.instantiator().createConfig(_config);
@@ -3333,7 +3367,7 @@ a5.Package("a5.cl")
 		/**
 		 *
 		 */
-		this.Override.appParams = function(){	return a5.cl._cl_storedCfgs.appParams; }
+		this.Override.appParams = function(){	return a5.cl.CLMain._cl_storedCfgs.appParams; }
 
 		/**
 		 *
@@ -3458,6 +3492,101 @@ a5.Package("a5.cl")
 		}
 	
 });
+
+
+a5.Package('a5.cl')
+
+	.Extends('CLBase')
+	.Static(function(CLMain){
+		CLMain._cl_storedCfgs = {config:[], appParams:{}, pluginConfigs:[]};
+	})
+	.Prototype('CLMain', 'abstract', function(proto, im, CLMain){
+		
+		proto.CLMain = function(){
+			proto.superclass(this);
+			if(CLMain._extenderRef.length > 1)
+				return proto.throwError(proto.create(a5.cl.CLError, ['Invalid class "' + this.namespace() + '", a5.cl.CLMain must only be extended by one subclass.']))
+			if(this.getStatic().instanceCount() > 1)
+				return proto.throwError(proto.create(a5.cl.CLError, ['Invalid duplicate instance of a5.cl.CLMain subclass "' + this.getStatic().namespace() + '"']));
+			proto.cl().addOneTimeEventListener(im.CLEvent.APPLICATION_WILL_RELAUNCH, this.applicationWillRelaunch);
+			proto.cl().addEventListener(im.CLEvent.ONLINE_STATUS_CHANGE, this.onlineStatusChanged);
+			proto.cl().addOneTimeEventListener(im.CLEvent.APPLICATION_CLOSED, this.applicationClosed);
+			proto.cl().addOneTimeEventListener(im.CLEvent.PLUGINS_LOADED, this.pluginsLoaded);
+			proto.cl().addOneTimeEventListener(im.CLEvent.AUTO_INSTANTIATION_COMPLETE, this.autoInstantiationComplete);
+			proto.cl().addOneTimeEventListener(im.CLEvent.APPLICATION_WILL_LAUNCH, this.applicationWillLaunch);
+			proto.cl().addOneTimeEventListener(im.CLEvent.APPLICATION_LAUNCHED, this.applicationLaunched);
+		}
+		
+		/**
+		 * 
+		 * @param {Object} obj
+		 */
+		proto.setAppParams = function(obj){ CLMain._cl_storedCfgs.appParams = obj; }
+		
+		/**
+		 * 
+		 * @param {Object} obj
+		 */
+		proto.setConfig = function(obj){ CLMain._cl_storedCfgs.config = obj; }
+		
+		/**
+		 * 
+		 * @param {string} namespace
+		 * @param {Object} obj
+		 */
+		proto.setPluginConfig = function(namespace, obj){ CLMain._cl_storedCfgs.pluginConfigs.push({nm:namespace, obj:obj}); }
+		
+		/**
+		 * 
+		 */
+		proto.pluginsLoaded = function(){}
+		/**
+		 * @name onlineStatusChanged
+		 * @description Called by the framework when the browser's online status has changed. This is equivalent to listening for {@link a5.cl.MVC.event:ONLINE_STATUS_CHANGE}.
+		 */
+		proto.onlineStatusChanged = function(isOnline){}
+		
+		/**
+		 * @name autoInstantiationComplete 
+		 * @description Called by the framework when auto detected classes have been successfully instantiated.
+		 */
+		proto.autoInstantiationComplete = function(){}
+		
+		/**
+		 * @name applicationWillLaunch 
+		 * @description Called by the framework when the application is about to launch.
+		 */
+		proto.applicationWillLaunch = function(){}
+		
+		/**
+		 * @name applicationLaunched 
+		 * @description Called by the framework when the application has successfully launched.
+		 */
+		proto.applicationLaunched = function(){}
+		
+		/**
+		 * @name applicationWillClose
+		 * @description Called by the framework when the window is about to be closed. This method is tied to
+		 * the onbeforeunload event in the window, and as such can additionally return back a custom string value to throw in a confirm
+		 * dialogue and allow the user to cancel the window close if desired.
+		 */
+		proto.applicationWillClose = function(){
+			
+		}
+		
+		/**
+		 * @name applicationClosed
+		 * @description Called by the framework when the window is closing.
+		 */
+		proto.applicationClosed = function(){}
+		
+		/**
+		 * @name applicationWillRelaunch
+		 * @description Called by the framework when the application is about to relaunch.
+		 */
+		proto.applicationWillRelaunch = function(){}
+})	
+
 
 
 })(this);

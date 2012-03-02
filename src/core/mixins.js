@@ -47,7 +47,9 @@ a5.SetNamespace('a5.core.mixins', {
 			i, l, mixin;
 			
 		for (i = 0, l = mixins.length; i < l; i++) {
-			mixin = a5.GetNamespace(mixins[i], imports());
+			mixin = a5.GetNamespace(mixins[i], typeof imports === 'function' ? imports() : imports);
+			if(!mixin)
+				return a5.ThrowError(404, null, {mixin:mixins[i]});
 			mixinInsts.push(mixin);
 			for (i = 0; i < sourceObj.constructor._mixinRef.length; i++)
 				if (sourceObj.constructor._mixinRef[i] === mixin)

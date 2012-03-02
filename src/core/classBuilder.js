@@ -252,9 +252,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 					extender.prototype = proxy;
 					proxy = null;	
 				} else
-					extender.prototype = new base();
-				if(base.namespace && base.isSingleton())
-					isSingleton = true;				
+					extender.prototype = new base();			
 				superclass = base;
 			} else
 				return a5.ThrowError('Cannot extend ' + base.namespace() + ', class marked as final.');
@@ -402,7 +400,9 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 			} else
 				a5.ThrowError(205, null, {nm:obj.namespace()});
 			delete obj._mixinDef.Properties;
+			delete obj._mixinDef.Contract;
 			delete obj._mixinDef.MustExtend;
+			delete obj._mixinDef.MustMix;
 		}
 		if (!fromQueue) processQueue();
 	},

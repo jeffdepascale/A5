@@ -37,6 +37,7 @@ a5.SetNamespace('a5.ErrorDefinitions', {
 	401:'Mixin "{nm}" requires owner class to mix "{cls}".',
 	402:'Mixin "{nm}" already mixed into ancestor chain.',
 	403:'Invalid mixin: Method "{method}" defined by more than one specified mixin.',
+	404:'Invalid mixin: Mixin "{mixin}" does not exist.',
 	
 	//600: Contract
 	601:'Invalid implementation of Contract on interace {intNM} in class {implNM} for method {method}.'

@@ -23,6 +23,7 @@ a5.SetNamespace('a5.ErrorDefinitions', {
 	217:'Cannot create new instance of class "{nm}", class marked as singleton already exists.',
 	218:'Constructor not defined on class "{clsName}"',
 	219:'Class "{currClass}" requires "{checkedClass}"',
+	220:'Invalid attempt to define new method "{prop}" in class "{namespace}", without calling override, method exists in mixin.',
 	
 	//300: attributes
 	300:'Invalid attribute definition: "Attributes" call must take a function as its last parameter.',

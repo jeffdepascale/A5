@@ -58,7 +58,7 @@ a5.SetNamespace('a5.core.mixins', {
 				if (method !== 'dealloc' && method !== 'Properties' && method !== 'mixinReady' && method !== 'MustExtend' && method !== 'Contract') {
 					if (usedMethods[method] === undefined) {
 						if(inst === undefined)
-							sourceObj.constructor._a5_mixedMethods[method] = usedMethods = mixin._mixinDef[method];
+							sourceObj.constructor._a5_mixedMethods[method] = mixin._mixinDef[method];
 						sourceObj[method] = mixin._mixinDef[method];
 						usedMethods[method] = 'mixed';
 					} else

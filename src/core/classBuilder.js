@@ -2,8 +2,6 @@
 a5.SetNamespace('a5.core.classBuilder', true, function(){
 	
 	var packageQueue = [],
-		deprecationErrors = "",
-		count = 0,
 		delayProtoCreation = false,
 		queuedPrototypes = [],
 		queuedImplementValidations = [],
@@ -52,6 +50,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		obj.Override = {};
 		obj.Final = {};
 		owner.call(scope, obj, imports, stRef);
+		a5.core.mixins.initializeMixins(obj);
 		processMethodChangers(obj);
 		for (prop in obj) {
 			if (({}).hasOwnProperty.call(obj, prop) && typeof obj[prop] === 'function' && a5.core.classProxyObj[prop] === undefined) {
@@ -75,27 +74,33 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	},
 	
 	processMethodChangers = function(obj){
-		var sc = obj.superclass();
+		var sc = obj.superclass(),
+			mixinRef = obj.constructor._a5_mixedMethods;
 		if(!sc)
 			sc = {};
 		for(prop in obj){
-			if(obj.hasOwnProperty(prop)){
+			if(obj.hasOwnProperty(prop) && typeof obj[prop] === 'function'){
 				if (prop !== 'Final' && prop !== 'Override' && prop !== 'constructor' && prop !== 'prototype' && prop !== 'dealloc' && prop !== '_a5_initialized') {
-					if (sc[prop] !== undefined && sc[prop].toString().indexOf('[native code]') === -1){
+					if (sc[prop] && sc[prop].toString().indexOf('[native code]') === -1){
 						if(sc[prop].Final == true)
 							return a5.ThrowError(201, null, {prop:prop, namespace:obj.namespace()});
-						//TODO: remove override deprecation tracking
-						deprecationErrors += (obj.namespace() + ' ' + prop + ' need call override\n');
-						count++;
 						return a5.ThrowError(200, null, {prop:prop, namespace:obj.namespace()});
+					} else {
+						var mixMethod = mixinRef[prop];
+						if (mixinRef[prop] !== undefined && mixMethod !== obj[prop]) {
+							return a5.ThrowError(220, null, {
+								prop: prop,
+								namespace: obj.namespace()
+							});
+						}
 					}
 				}
 			}
 		}
 		for(prop in obj.Override){
-			if(sc[prop] === undefined)
+			if(sc[prop] === undefined && mixinRef[prop] === undefined)
 				return a5.ThrowError(202, null, {prop:prop, namespace:obj.namespace()});
-			if(sc[prop].Final === true)
+			if(sc[prop] && sc[prop].Final === true || mixinRef[prop] && mixinRef[prop].Final === true)
 				return a5.ThrowError(203, null, {prop:prop, namespace:obj.namespace()});
 			obj[prop] = obj.Override[prop];
 		}
@@ -495,10 +500,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		_a5_processImports:_a5_processImports,
 		_a5_verifyPackageQueueEmpty:_a5_verifyPackageQueueEmpty,
 		_a5_delayProtoCreation:_a5_delayProtoCreation,
-		_a5_createQueuedPrototypes:_a5_createQueuedPrototypes,
-		deprecates: function(){
-			return count + '\n' + deprecationErrors;
-		}
+		_a5_createQueuedPrototypes:_a5_createQueuedPrototypes
 	}
 })
 

@@ -295,7 +295,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 									descenderRef.constructor.superclass().constructor.namespace ? 
 									descenderRef.constructor.superclass() : null;
 				}
-				a5.core.mixins.initializeMixins(this);
+				//a5.core.mixins.initializeMixins(this);
 				for(i = 0, l = protoPropRef.length; i<l; i++)
 					protoPropRef[i].call(this);
 				this.constructor._a5_instanceConst.apply(this, _args);

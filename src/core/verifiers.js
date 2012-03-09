@@ -13,6 +13,8 @@ a5.SetNamespace('a5.core.verifiers', {
 			implNM = pkgObj.implement[i];
 			try {
 				testInst = new obj;
+				testInst.Override = {};
+				testInst.Final = {};
 				testInst.Attributes = function(){
 					var args = Array.prototype.slice.call(arguments);
 					var func = args.pop();
@@ -67,7 +69,7 @@ a5.SetNamespace('a5.core.verifiers', {
 	
 	checkImplements:function(cls, implement){
 		if(typeof implement === 'string')
-			implement = GetNamespace(implement);
+			implement = a5.GetNamespace(implement);
 		var imRef = cls._implementsRef, i, l;
 		for(i = 0, l=imRef.length; i<l; i++)
 			if(imRef[i] === implement)

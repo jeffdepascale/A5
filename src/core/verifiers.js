@@ -70,10 +70,13 @@ a5.SetNamespace('a5.core.verifiers', {
 	checkImplements:function(cls, implement){
 		if(typeof implement === 'string')
 			implement = a5.GetNamespace(implement);
-		var imRef = cls._implementsRef, i, l;
-		for(i = 0, l=imRef.length; i<l; i++)
-			if(imRef[i] === implement)
-				return true;
+		var imRef = cls._implementsRef, i, j, k, l;
+		while (imRef) {
+			for (i = 0, l = imRef.length; i < l; i++) 
+				if (imRef[i] === implement) 
+					return true;
+			imRef = cls.superclass() ? cls.superclass().getStatic()._implementsRef : null;
+		}
 		return false;
 	},
 	

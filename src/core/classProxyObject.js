@@ -52,7 +52,6 @@ a5.SetNamespace('a5.core.classProxyObj',{
  		 * @memberOf TopLevel#
  		 * @function
 	 	 */
-		_a5_ar:{},
 		isA5:true,
 		isA5ClassDef:function(){ return false },
 		
@@ -273,7 +272,8 @@ a5.SetNamespace('a5.core.classProxyObj',{
 				this._a5_instanceUID = this.namespace().replace(/\./g, '_') + '__' + this.constructor.instanceCount();
 				if(this.instanceCount() === 0)
 					this.constructor._a5_instance = this;
-				this.constructor._instanceCount++;					
+				this.constructor._instanceCount++;	
+				this._a5_ar = {};				
 				var self = this,
 					descenderRef = this,
 					_args = args || [],

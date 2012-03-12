@@ -31,6 +31,7 @@ a5.SetNamespace('a5.ErrorDefinitions', {
 	302:'Attribute error: Attributes call accepts only arrays as attribute annotations.',
 	303:'Attribute error: First parameter must be a reference to a class that extends a5.Attribute.',
 	304:'Attribute error: invalid parameter specified for Attribute, params must be key/value pair objects.',
+	305:'Attribute error: no parameters passed to Attribute call.',
 	308:'Error processing attribute "{prop}", "{method}" must return a value.',
 	
 	//400: mixins

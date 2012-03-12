@@ -3,9 +3,12 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 	
 	createAttribute = function(scope, args){
 		var attributes = Array.prototype.slice.call(args),
-			method = attributes.pop(), i, j, k, l, t,
+			method, i, j, k, l, t,
 			attrObj = {};
-		if(typeof method !== 'function')
+		if(!attributes.length)
+			return a5.ThrowError(305);
+		method = typeof attributes[attributes.length-1] === 'function' ? attributes.pop() : null;
+		if(method !== null && typeof method !== 'function')
 			return a5.ThrowError(300);
 		if (!attributes.length)
 			return a5.ThrowError(301);
@@ -59,8 +62,9 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 				executionScope = this,
 				callOriginator
 				count = 0;
-			for(var prop in proxyFunc)
-				method[prop] = proxyFunc[prop];
+			if(method)
+				for(var prop in proxyFunc)
+					method[prop] = proxyFunc[prop];
 			if (proxyFunc.caller.getClassInstance !== undefined)
 				callOriginator = proxyFunc.caller;
 			for(var i = 0, l = attributes.length; i<l; i++){
@@ -113,7 +117,7 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 			
 			processPost = function(args){
 				count = 0;
-				var postRet = method.apply(executionScope, args);
+				var postRet = method ? method.apply(executionScope, args) : args;
 				return processAttribute(count, postRet, true);
 			},		
 			

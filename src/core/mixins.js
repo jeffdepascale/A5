@@ -1,7 +1,7 @@
 
 a5.SetNamespace('a5.core.mixins', {
 	
-	initializeMixins:function(inst){
+	prepareMixins:function(inst){
 		var scope = inst,
 			mixinRef = inst.constructor._mixinRef,
 			i, l, prop, cls;
@@ -13,13 +13,22 @@ a5.SetNamespace('a5.core.mixins', {
 						if (!inst.doesExtend(a5.GetNamespace(cls, inst.imports())))
 							return a5.ThrowError(400, null, {nm:mixinRef[i].namespace()});
 					}
-				}
+				}			
+			}						
+		}	
+	},
+	
+	initializeMixins:function(inst){
+		var scope = inst,
+			mixinRef = inst.constructor._mixinRef,
+			i, l, prop, cls;
+		if (mixinRef.length) {
+			for (i = mixinRef.length - 1, l = -1; i > l; i--)
 				if (mixinRef[i]._a5_mixinProps !== undefined) 
 					mixinRef[i]._a5_mixinProps.call(scope);
-			}						
 			for(i = 0, l = mixinRef.length; i<l; i++)
 				mixinRef[i]._a5_instanceConst.call(scope);
-		}	
+		}
 	},
 	
 	mixinsReady:function(scope){

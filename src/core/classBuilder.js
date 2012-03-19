@@ -50,7 +50,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		obj.Override = {};
 		obj.Final = {};
 		owner.call(scope, obj, imports, stRef);
-		a5.core.mixins.initializeMixins(obj);
+		a5.core.mixins.prepareMixins(obj);
 		processMethodChangers(obj);
 		for (prop in obj) {
 			if (({}).hasOwnProperty.call(obj, prop) && typeof obj[prop] === 'function' && a5.core.classProxyObj[prop] === undefined) {

@@ -60,7 +60,7 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 				prop,
 				attrClasses = [], 
 				executionScope = this,
-				callOriginator
+				callOriginator,
 				count = 0;
 			if(method)
 				for(var prop in proxyFunc)
@@ -74,26 +74,32 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 				attrClasses.push({cls:clsInst, props:props});
 			}
 			
-			var processCB = function(args, isPost){
-				processAttribute(count, args, isPost);
+			var processCB = function(args, isPost, preArgs){
+				processAttribute(count, args, isPost, preArgs);
 			},
 			
-			processAttribute = function(id, args, isPost){
-				if (Object.prototype.toString.call(args) !== '[object Array]')
-					args = [args];
+			processAttribute = function(id, args, isPost, preArgs){
+				if (args) {
+					if (Object.prototype.toString.call(args) !== '[object Array]') 
+						args = [args];
+				} else {
+					args = [];
+				}
+				if(!preArgs)
+					preArgs = args;
 				if (id >= attrClasses.length) {
 					if (isPost) {
-							return args[0];
+						return args[0];
 					} else 						
-						return processPost(args);
+						return processPost(args, preArgs);
 				}
 				var ret, 
 					isPost = isPost || false,
 					isAsync = false,
 					callback = function(_args){
-						processCB.call(this, _args || args, isPost);	
+						processCB.call(this, _args || args, isPost, preArgs);	
 					}	
-					ret = attrClasses[id].cls["method" + (isPost ? "Post" : "Pre")](attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator);
+					ret = attrClasses[id].cls["method" + (isPost ? "Post" : "Pre")](attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, preArgs);
 				if (ret !== null && ret !== undefined) {
 					switch(ret){
 						case a5.Attribute.SUCCESS:
@@ -110,15 +116,15 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 					}
 				} else
 					return a5.ThrowError(308, null, {prop:prop, method:isPost ? 'methodPost' : 'methodPre'});
-				count++;
+				count = id+1;
 				if(!isAsync)
-					return processAttribute(count, ret, isPost);
+					return processAttribute(count, ret, isPost, args, preArgs);
 			},
 			
-			processPost = function(args){
+			processPost = function(args, preArgs){
 				count = 0;
-				var postRet = method ? method.apply(executionScope, args) : args;
-				return processAttribute(count, postRet, true);
+				var postRet = method ? method.apply(executionScope, args) : args.length ? args[0] : undefined;
+				return processAttribute(0, postRet, true, preArgs);
 			},		
 			
 			preRet = processAttribute(count, Array.prototype.slice.call(arguments));

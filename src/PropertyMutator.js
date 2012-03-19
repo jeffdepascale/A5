@@ -7,7 +7,7 @@ a5.Package('a5')
 			cls.superclass(this);
 		}
 		
-		cls.Override.methodPre = function(typeRules, args, scope, method, callback){
+		cls.Override.methodPre = function(typeRules, args, scope, method, callback, callOriginator){
 			if(args.length){
 				var typeVal = typeRules[0].validate,
 					isCls = false;
@@ -23,9 +23,16 @@ a5.Package('a5')
 						return a5.Attribute.FAILURE;
 				}
 				scope[typeRules[0].property] = args[0];
-				return scope;
+				return a5.Attribute.SUCCESS;
 			}
 			var retVal = scope[typeRules[0].property];
 			return retVal === null ? a5.Attribute.RETURN_NULL : retVal;
 		}	
+		
+		cls.Override.methodPost = function(typeRules, args, scope, method, callback, callOriginator, preArgs){
+			if (preArgs.length) 
+				return scope;
+			else 				
+				return a5.Attribute.SUCCESS;
+		}
 })

@@ -5,7 +5,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		delayProtoCreation = false,
 		queuedPrototypes = [],
 		queuedImplementValidations = [],
-		prop;
+		prop,
 	
 	Create = function(classRef, args){
 		var ref, retObj;
@@ -114,6 +114,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		var imports, clsName, 
 		cls, base, type, proto, 
 		implement, mixins,
+		attribs = null,
 		staticMethods = false,
 		isMixin = false, 
 		isInterface = false, 
@@ -127,6 +128,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 						clsName:clsName, 
 						cls:cls, 
 						base:base, 
+						attribs:attribs,
 						type:type, 
 						proto:proto, 
 						implement:implement,
@@ -182,10 +184,25 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 			process();
 		},
 		
-		Mixin = function(str, $cls){
-			clsName = str;
-			cls = $cls,
+		Mixin = function(){
 			isMixin = true;
+			var args = Array.prototype.slice.call(arguments);
+			clsName = args[0];
+			for(var i = 1, l = args.length; i<l; i++){
+				switch(typeof args[i]){
+					case 'string':
+						type = args[i];
+						break;
+					case 'object':
+						if(Object.prototype.toString.call(args[i]) === '[object Array]')
+							attribs = args[i];
+						else
+						break;
+					case 'function':
+						cls = args[i];
+						break;
+				}
+			}
 			process();
 		},
 		
@@ -195,20 +212,45 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 			process();			
 		},
 		
-		Class = function(str, $cls, $prop3){
-			clsName = str;
-			var hasType = (typeof $cls === 'string');
-			cls = hasType ? $prop3:$cls;
-			type = hasType ? $cls:undefined;
+		Class = function(){
+			var args = Array.prototype.slice.call(arguments);
+			clsName = args[0];
+			for(var i = 1, l = args.length; i<l; i++){
+				switch(typeof args[i]){
+					case 'string':
+						type = args[i];
+						break;
+					case 'object':
+						if(Object.prototype.toString.call(args[i]) === '[object Array]')
+							attribs = args[i];
+						break;
+					case 'function':
+						cls = args[i];
+						break;
+				}
+			}
 			process();
 		},
 		
-		Prototype = function(str, $cls, $prop3){
+		Prototype = function(){
 			isProto = true;
-			clsName = str;
-			var hasType = (typeof $cls === 'string');
-			proto = hasType ? $prop3:$cls;
-			type = hasType ? $cls:undefined;
+			var args = Array.prototype.slice.call(arguments);
+			clsName = args[0];
+			for(var i = 1, l = args.length; i<l; i++){
+				switch(typeof args[i]){
+					case 'string':
+						type = args[i];
+						break;
+					case 'object':
+						if(Object.prototype.toString.call(args[i]) === '[object Array]')
+							attribs = args[i];
+						else
+						break;
+					case 'function':
+						proto = args[i];
+						break;
+				}
+			}
 			process();
 		}
 		
@@ -332,6 +374,8 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 			isValid = true, i, l;
 		if(pkgObj.staticMethods)
 			pkgObj.staticMethods(obj, imports());
+		/*if(pkgObj.attribs)
+			a5.core.attributes.applyClassAttribs(obj, pkgObj.attribs);*/
 		if (pkgObj.proto && delayProtoCreation) {
 			queuedPrototypes.push({obj:obj, pkgObj:pkgObj});
 			if(pkgObj.implement)
@@ -423,7 +467,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 				var obj;
 				for (prop in procObj) {
 					obj = procObj[prop];
-					if (typeof obj === 'function' && obj.namespace != undefined && retObj[prop] === undefined) retObj[prop] = obj;
+					if ((typeof obj === 'function' || typeof obj === 'object') && retObj[prop] === undefined) retObj[prop] = obj;
 				}
 			};
 			
@@ -453,10 +497,13 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 					if (str.charAt(str.length - 1) == '*') isWC = true;
 					if (isWC) {
 						pkg = a5.GetNamespace(str.substr(0, str.length - 2), null, true);
-						processObj(pkg);
+						if(pkg)
+							processObj(pkg);
+						else
+							rebuildArray.push(str);
 					} else {
 						clsName = dotIndex > -1 ? str.substr(dotIndex + 1) : str;
-						var obj = a5.GetNamespace(str);
+						var obj = a5.GetNamespace(str, null, true);
 						if (obj) {
 							if (retObj[clsName] === undefined)
 								retObj[clsName] = obj;

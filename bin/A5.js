@@ -291,7 +291,9 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 					callback = function(_args){
 						processCB.call(this, _args || args, isPost, preArgs);	
 					}	
-					ret = attrClasses[id].cls["method" + (isPost ? "Post" : "Pre")](attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, preArgs);
+					ret = attrClasses[id].cls.around(attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, preArgs);
+					if(ret === a5.AspectAttribute.NOT_IMPLEMENTED)
+						ret = attrClasses[id].cls[(isPost ? "after" : "before")](attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, preArgs);
 				if (ret !== null && ret !== undefined) {
 					switch(ret){
 						case a5.Attribute.SUCCESS:
@@ -1481,57 +1483,55 @@ a5.Package('a5')
 
 	.Prototype('Attribute', 'singleton', function(proto, im, Attribute){
 		
-		Attribute.RETURN_NULL = '_a5_attributeReturnsNull';
-		Attribute.SUCCESS = '_a5_attributeSuccess';
-		Attribute.ASYNC = '_a5_attributeAsync';
-		Attribute.FAILURE = '_a5_attributeFailure';
-		
-		Attribute.processInstance = function(cls){
-			return a5.core.attributes.processInstance(cls);
+		proto.Attribute = function(){
 		}
-		
-		this.Properties(function(){
-			this.target = a5.AttributeTarget.ALL;
-		});
-		
-		proto.Attribute = function($target){
-			if($target)
-				this.target = $target;
-		}
-		
-		proto.instanceCreate = function(rules, instance){ return Attribute.SUCCESS; }
-		
-		proto.instanceDestroy = function(rules, instance){ return Attribute.SUCCESS; }
-		
-		proto.instanceProcess = function(rules, instance){ return Attribute.SUCCESS; }
-		
-		proto.methodPre = function(){ return Attribute.SUCCESS; }
-		
-		proto.methodPost = function(scope, method){ return Attribute.SUCCESS; }
 
 })
 
 a5.Package('a5')
 
-	.Static('AttributeTarget', function(AttributeTarget){
+	.Extends('Attribute')
+	.Prototype('AspectAttribute', function(cls, im, AspectAttribute){
 		
-		AttributeTarget.ALL = '_a5_attTargAll';
-		AttributeTarget.METHOD = '_a5_attTargMethod';
-		AttributeTarget.CLASS = '_a5_attTargClass';
+		AspectAttribute.RETURN_NULL = '_a5_aspectReturnsNull';
+		AspectAttribute.SUCCESS = '_a5_aspectSuccess';
+		AspectAttribute.ASYNC = '_a5_aspectAsync';
+		AspectAttribute.FAILURE = '_a5_aspectFailure';
+		AspectAttribute.NOT_IMPLEMENTED = '_a5_notImplemented';
+		
+		cls.AspectAttribute = function(){
+			cls.superclass(this);
+		}
+		
+		cls.before = function(){ return AspectAttribute.NOT_IMPLEMENTED; }
+		
+		cls.after = function(){ return AspectAttribute.NOT_IMPLEMENTED; }
+		
+		cls.around = function(){ return AspectAttribute.NOT_IMPLEMENTED; }
+});
+
+a5.Package('a5')
+
+	.Static('AspectAttributeTarget', function(AspectAttributeTarget){
+		
+		AspectAttributeTarget.ALL = '_a5_aspectTargAll';
+		AspectAttributeTarget.METHOD = '_a5_aspectTargMethod';
+		AspectAttributeTarget.CLASS = '_a5_aspectTargClass';
 			
 })	
 
 
+
 a5.Package('a5')
 
-	.Extends('Attribute')
-	.Class('ContractAttribute', function(cls, im, Contract){
+	.Extends('AspectAttribute')
+	.Class('ContractAttribute', function(cls, im, ContractAttribute){
 		
 		cls.ContractAttribute = function(){
 			cls.superclass(this);
 		}
 		
-		cls.Override.methodPre = function(typeRules, args, scope, method, callback){
+		cls.Override.before = function(typeRules, args, scope, method, callback){
 			var retObj = null,
 				foundTestRule = false,
 				processError = function(error){
@@ -1546,7 +1546,7 @@ a5.Package('a5')
 					retObj = runRuleCheck(typeRules[i], args);
 					if (retObj instanceof a5.ContractException) {
 						cls.throwError(processError(retObj));
-						return a5.Attribute.FAILURE;
+						return a5.AspectAttribute.FAILURE;
 					}
 					if (retObj !== false) {
 						foundTestRule = true;
@@ -1559,12 +1559,12 @@ a5.Package('a5')
 				retObj = runRuleCheck(typeRules[0], args, true);
 				if (retObj instanceof a5.ContractException) {
 					cls.throwError(processError(retObj));
-					return a5.Attribute.FAILURE;
+					return a5.AspectAttribute.FAILURE;
 				}
 			}
 			if (!foundTestRule || retObj === false) {
 				cls.throwError(processError(cls.create(a5.ContractException, ['no matching overload found'])));
-				return a5.Attribute.FAILURE;
+				return a5.AspectAttribute.FAILURE;
 			} else {
 				return retObj;
 			}
@@ -1710,14 +1710,14 @@ a5.Package('a5')
 
 a5.Package('a5')
 
-	.Extends('Attribute')
+	.Extends('AspectAttribute')
 	.Class('PropertyMutatorAttribute', function(cls){
 		
 		cls.PropertyMutatorAttribute = function(){
 			cls.superclass(this);
 		}
 		
-		cls.Override.methodPre = function(typeRules, args, scope, method, callback, callOriginator){
+		cls.Override.before = function(typeRules, args, scope, method, callback, callOriginator){
 			if(args.length){
 				var typeVal = typeRules[0].validate,
 					isCls = false;
@@ -1726,24 +1726,24 @@ a5.Package('a5')
 						isCls = true;
 						var typeVal = a5.GetNamespace(typeVal);
 						if(!typeVal)
-							return a5.Attribute.FAILURE;
+							return a5.AspectAttribute.FAILURE;
 					}
 					var isValid = isCls ? (args[0] instanceof typeVal) : (typeof args[0] === typeVal);
 					if(!isValid)
-						return a5.Attribute.FAILURE;
+						return a5.AspectAttribute.FAILURE;
 				}
 				scope[typeRules[0].property] = args[0];
-				return a5.Attribute.SUCCESS;
+				return a5.AspectAttribute.SUCCESS;
 			}
 			var retVal = scope[typeRules[0].property];
-			return retVal === null ? a5.Attribute.RETURN_NULL : retVal;
+			return retVal === null ? a5.AspectAttribute.RETURN_NULL : retVal;
 		}	
 		
-		cls.Override.methodPost = function(typeRules, args, scope, method, callback, callOriginator, preArgs){
+		cls.Override.after = function(typeRules, args, scope, method, callback, callOriginator, preArgs){
 			if (preArgs.length) 
 				return scope;
 			else 				
-				return a5.Attribute.SUCCESS;
+				return a5.AspectAttribute.SUCCESS;
 		}
 })
 

@@ -123,8 +123,8 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 			
 			processPost = function(args, preArgs){
 				count = 0;
-				var postRet = method ? method.apply(executionScope, args) : args.length ? args[0] : undefined;
-				if(postRet)
+				var postRet = method ? method.apply(executionScope, args) : undefined;
+				if(postRet !== undefined)
 					postRet = [postRet];
 				else
 					postRet = args;

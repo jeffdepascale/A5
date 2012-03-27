@@ -78,7 +78,7 @@ a5.Package('a5.unitTest.tests')
 						cls.assert(self.mixinTest2() == 'mixinTest2 called', 'mixinTest2 method failure');
 					}
 					
-					self.mixinTest = function(){
+					self.Override.mixinTest = function(){
 						override1Called = true;
 						return self.mixins().mixinTest.call(this);
 					}

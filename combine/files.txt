@@ -7,6 +7,7 @@ src/core/verifiers.js
 src/core/mixins.js
 src/core/errorHandling.js
 src/Attribute.js
+src/Aspect.js
 src/Contract.js
 src/PropertyMutator.js
 src/Event.js

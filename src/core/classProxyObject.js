@@ -91,6 +91,14 @@ a5.SetNamespace('a5.core.classProxyObj',{
 			a5.core.mixins.applyMixins(this, cls, this.imports(), this);
 		},
 		
+		getAttributes:function(){
+			return this.constructor.getAttributes();
+		},
+		
+		getAttributeValue:function(value){
+			return this.constructor.getAttributeValue(value);
+		},
+		
 		getMethods:function(includeInherited, includePrivate){
 			var retArray = [];
 			for(var prop in this)

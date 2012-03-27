@@ -27,6 +27,26 @@ a5.Package('a5.unitTest.tests')
 			var attrtest1 = cls.create(a5.unitTest.testClasses.attributes.AttrTest1);
 			attrtest1.contractTest("foo");
 			cls.log('AttrTest1 passed');
+			
+			a5.Package('a5.unitTest.testClasses.attributes')
+			
+				.Extends('a5.Attribute')
+				.Class('TestAttribute', function(cls){
+					
+					cls.TestAttribute = function(){
+						cls.superclass(this);
+					}
+				})
+			
+			
+			a5.Package('a5.unitTest.testClasses.attributes')
+
+				.Class('AttrTest2', ['Test'], function(cls, im){
+					
+					cls.AttrTest2 = function(){
+						cls.superclass(this);
+					}
+				});
 		}
 		
 })	

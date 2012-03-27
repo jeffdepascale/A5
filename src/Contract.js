@@ -1,14 +1,14 @@
 
 a5.Package('a5')
 
-	.Extends('Attribute')
-	.Class('ContractAttribute', function(cls, im, Contract){
+	.Extends('AspectAttribute')
+	.Class('ContractAttribute', function(cls, im, ContractAttribute){
 		
 		cls.ContractAttribute = function(){
 			cls.superclass(this);
 		}
 		
-		cls.Override.methodPre = function(typeRules, args, scope, method, callback){
+		cls.Override.before = function(typeRules, args, scope, method, callback){
 			var retObj = null,
 				foundTestRule = false,
 				processError = function(error){
@@ -23,7 +23,7 @@ a5.Package('a5')
 					retObj = runRuleCheck(typeRules[i], args);
 					if (retObj instanceof a5.ContractException) {
 						cls.throwError(processError(retObj));
-						return a5.Attribute.FAILURE;
+						return a5.AspectAttribute.FAILURE;
 					}
 					if (retObj !== false) {
 						foundTestRule = true;
@@ -36,12 +36,12 @@ a5.Package('a5')
 				retObj = runRuleCheck(typeRules[0], args, true);
 				if (retObj instanceof a5.ContractException) {
 					cls.throwError(processError(retObj));
-					return a5.Attribute.FAILURE;
+					return a5.AspectAttribute.FAILURE;
 				}
 			}
 			if (!foundTestRule || retObj === false) {
 				cls.throwError(processError(cls.create(a5.ContractException, ['no matching overload found'])));
-				return a5.Attribute.FAILURE;
+				return a5.AspectAttribute.FAILURE;
 			} else {
 				return retObj;
 			}

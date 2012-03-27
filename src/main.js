@@ -32,7 +32,6 @@
 		if(!namespace.match(/^[A-Za-z0-9.]*$/))
 			return a5.ThrowError(100, null, {namespace:namespace});
 		object = splitNM.length ? _af_objectQualifier(splitNM) : window
-		
 		if (object[property] !== undefined)
 			return object[property]; 
 		return object[property] = autoCreate ? new placedObject() : placedObject;
@@ -93,42 +92,6 @@
 		 */
 		buildDate:function(){
 			return '{BUILD_DATE}';
-		},
-		
-		/**
-		 * @name isStableRelease
-		 * @type String
-		 * @returns The build date of the release of A5.
-		 */
-		isStableRelease:function(){
-			return false;
-		},
-		
-		/**
-		 * @name releaseType
-		 * @type String
-		 * @returns Release type of A5.
-		 */
-		releaseType:function(){
-			return 'alpha';
-		},
-		
-		/**
-		 * @name isPublicRelease
-		 * @type Boolean
-		 * @returns Whether the build is a public release or ongoing development build.
-		 */
-		isPublicRelease:function(){
-			return false;
-		},
-		
-		/**
-		 * @name versionInfo
-		 * @type String
-		 * @returns A string containing version info for A5, comprised of all version related release properties.
-		 */
-		versionInfo:function(){
-			return ('A5 - version ' + this.version() + ', ' + this.releaseType() + ', ' + this.buildDate() + '. ' + (this.isPublicRelease() ? 'Public release':'Development build') + '. ' + (this.isStableRelease() ? 'Stable release':'Unstable release') + '.');
 		},
 		
 		/**

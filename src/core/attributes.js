@@ -1,10 +1,11 @@
 
 a5.SetNamespace('a5.core.attributes', true, function(){
 	
-	createAttribute = function(scope, args){
+	var createAttribute = function(scope, args){
 		var attributes = Array.prototype.slice.call(args),
 			method, i, j, k, l, t,
-			attrObj = {};
+			attrObj = {},
+			isAspect = false;
 		if(!attributes.length)
 			return a5.ThrowError(305);
 		method = typeof attributes[attributes.length-1] === 'function' ? attributes.pop() : null;
@@ -20,11 +21,11 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 				var attr = attrDef[j],
 					t = typeof attr;
 				if(j == 0){
-					var isError = false;
+					var isError = false,
+						clsDef = null;
 					if(t !== 'string'){
 						if(t === 'function'){
-							if(!attr.isA5 || !attr.doesExtend(a5.Attribute))
-								isError = true;
+							clsDef = attr;
 						} else
 							isError = true;
 					} else {
@@ -32,10 +33,14 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 						if(!cls)
 							cls = a5.GetNamespace(attr + 'Attribute', scope.imports());
 						if(cls)
-							attrDef[j] = cls;
+							clsDef = attrDef[j] = cls;
 						else
 							isError = true;
 					}
+					if(!isError && (!clsDef.isA5 || !clsDef.doesExtend(a5.Attribute)))
+						isError = true;
+					else if(clsDef.doesExtend(a5.AspectAttribute))
+						isAspect = true;
 					if(isError)
 						return a5.ThrowError(303);
 				} else {
@@ -53,6 +58,7 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 			attributes[i] = [arr[0], vals];
 			attrObj[arr[0].className()] = vals;
 		}
+		
 		attrObj.wrappedMethod = method;
 			
 		var proxyFunc = function(){
@@ -74,32 +80,37 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 				attrClasses.push({cls:clsInst, props:props});
 			}
 			
-			var processCB = function(args, isPost, preArgs){
-				processAttribute(count, args, isPost, preArgs);
+			var processCB = function(args, isAfter, beforeArgs){
+				processAttribute(count, args, isAfter, beforeArgs);
 			},
 			
-			processAttribute = function(id, args, isPost, preArgs){
+			processAttribute = function(id, args, isAfter, beforeArgs){
 				if (args) {
 					if (Object.prototype.toString.call(args) !== '[object Array]') 
 						args = [args];
 				} else {
 					args = [];
 				}
-				if(!preArgs)
-					preArgs = args;
+				if(!beforeArgs)
+					beforeArgs = args;
 				if (id >= attrClasses.length) {
-					if (isPost) {
+					if (isAfter) {
 						return args[0];
 					} else 						
-						return processPost(args, preArgs);
+						return processAfter(args, beforeArgs);
 				}
 				var ret, 
-					isPost = isPost || false,
+					isAfter = isAfter || false,
+					isAround = false,
 					isAsync = false,
 					callback = function(_args){
-						processCB.call(this, _args || args, isPost, preArgs);	
+						processCB.call(this, _args || args, isAfter, beforeArgs);	
 					}	
-					ret = attrClasses[id].cls["method" + (isPost ? "Post" : "Pre")](attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, preArgs);
+					ret = attrClasses[id].cls.around(attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, beforeArgs);
+					if(ret === a5.AspectAttribute.NOT_IMPLEMENTED)
+						ret = attrClasses[id].cls[(isAfter ? "after" : "before")](attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, beforeArgs);
+					else
+						isAround = true;
 				if (ret !== null && ret !== undefined) {
 					switch(ret){
 						case a5.Attribute.SUCCESS:
@@ -115,13 +126,13 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 							return;
 					}
 				} else
-					return a5.ThrowError(308, null, {prop:prop, method:isPost ? 'methodPost' : 'methodPre'});
+					return a5.ThrowError(308, null, {prop:prop, method:isAround ? 'around' : (isAfter ? 'after' : 'before')});
 				count = id+1;
 				if(!isAsync)
-					return processAttribute(count, ret, isPost, args, preArgs);
+					return processAttribute(count, ret, isAfter, args, beforeArgs);
 			},
 			
-			processPost = function(args, preArgs){
+			processAfter = function(args, beforeArgs){
 				count = 0;
 				var postRet = method ? method.apply(executionScope, args) : undefined;
 				if(postRet !== undefined)
@@ -129,10 +140,8 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 				else
 					postRet = args;
 				return processAttribute(0, postRet, true, preArgs);
-			},		
-			
-			preRet = processAttribute(count, Array.prototype.slice.call(arguments));
-			return preRet;
+			}			
+			return processAttribute(count, Array.prototype.slice.call(arguments));
 		}
 		proxyFunc._a5_attributes = attrObj;
 		return proxyFunc;

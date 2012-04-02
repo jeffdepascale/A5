@@ -14,9 +14,9 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		doesExtend:function(cls){ return a5.core.verifiers.checkExtends(this, cls); },
 		doesMix:function(cls){ return a5.core.verifiers.checkMixes(this, cls); },
 		getAttributes:function(){ return this._a5_attributes; },
-		instance:function(autoCreate){
+		instance:function(autoCreate, args){
 			if (autoCreate === true)
-				return this._a5_instance || a5.Create(this);
+				return this._a5_instance || a5.Create(this, args);
 			else
 				return this._a5_instance;
 		},

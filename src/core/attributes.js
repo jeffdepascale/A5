@@ -64,6 +64,7 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 		var proxyFunc = function(){
 			var callOriginator,
 				prop,
+				pCaller,
 				attrClasses = [], 
 				executionScope = this,
 				callOriginator,
@@ -71,8 +72,13 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 			if(method)
 				for(var prop in proxyFunc)
 					method[prop] = proxyFunc[prop];
-			if (proxyFunc.caller.getClassInstance !== undefined)
-				callOriginator = proxyFunc.caller;
+			pCaller = proxyFunc.caller;
+			do{
+				if (pCaller.getClassInstance !== undefined)
+					callOriginator = pCaller;
+				else	
+					pCaller = pCaller.caller;
+			} while (pCaller !== null && !callOriginator);
 			for(var i = 0, l = attributes.length; i<l; i++){
 				var cls = attributes[i][0],
 					clsInst = cls.instance(true),

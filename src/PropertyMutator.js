@@ -25,7 +25,7 @@ a5.Package('a5')
 				scope[typeRules[0].property] = args[0];
 				return a5.AspectAttribute.SUCCESS;
 			}
-			var retVal = scope[typeRules[0].property];
+			var retVal = scope[typeRules[0].property] || null;
 			return retVal === null ? a5.AspectAttribute.RETURN_NULL : retVal;
 		}	
 		

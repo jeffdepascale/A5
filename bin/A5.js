@@ -33,7 +33,6 @@
 		if(!namespace.match(/^[A-Za-z0-9.]*$/))
 			return a5.ThrowError(100, null, {namespace:namespace});
 		object = splitNM.length ? _af_objectQualifier(splitNM) : window
-		
 		if (object[property] !== undefined)
 			return object[property]; 
 		return object[property] = autoCreate ? new placedObject() : placedObject;
@@ -97,42 +96,6 @@
 		},
 		
 		/**
-		 * @name isStableRelease
-		 * @type String
-		 * @returns The build date of the release of A5.
-		 */
-		isStableRelease:function(){
-			return false;
-		},
-		
-		/**
-		 * @name releaseType
-		 * @type String
-		 * @returns Release type of A5.
-		 */
-		releaseType:function(){
-			return 'alpha';
-		},
-		
-		/**
-		 * @name isPublicRelease
-		 * @type Boolean
-		 * @returns Whether the build is a public release or ongoing development build.
-		 */
-		isPublicRelease:function(){
-			return false;
-		},
-		
-		/**
-		 * @name versionInfo
-		 * @type String
-		 * @returns A string containing version info for A5, comprised of all version related release properties.
-		 */
-		versionInfo:function(){
-			return ('A5 - version ' + this.version() + ', ' + this.releaseType() + ', ' + this.buildDate() + '. ' + (this.isPublicRelease() ? 'Public release':'Development build') + '. ' + (this.isStableRelease() ? 'Stable release':'Unstable release') + '.');
-		},
-		
-		/**
 		 * Returns a class declaration for a given namespace string.
 		 * @name GetNamespace
 		 * @param {String} namespace
@@ -193,10 +156,11 @@ a5.SetNamespace('a5.core.reflection', true, function(){
 
 a5.SetNamespace('a5.core.attributes', true, function(){
 	
-	createAttribute = function(scope, args){
+	var createAttribute = function(scope, args){
 		var attributes = Array.prototype.slice.call(args),
 			method, i, j, k, l, t,
-			attrObj = {};
+			attrObj = {},
+			isAspect = false;
 		if(!attributes.length)
 			return a5.ThrowError(305);
 		method = typeof attributes[attributes.length-1] === 'function' ? attributes.pop() : null;
@@ -212,11 +176,11 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 				var attr = attrDef[j],
 					t = typeof attr;
 				if(j == 0){
-					var isError = false;
+					var isError = false,
+						clsDef = null;
 					if(t !== 'string'){
 						if(t === 'function'){
-							if(!attr.isA5 || !attr.doesExtend(a5.Attribute))
-								isError = true;
+							clsDef = attr;
 						} else
 							isError = true;
 					} else {
@@ -224,10 +188,14 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 						if(!cls)
 							cls = a5.GetNamespace(attr + 'Attribute', scope.imports());
 						if(cls)
-							attrDef[j] = cls;
+							clsDef = attrDef[j] = cls;
 						else
 							isError = true;
 					}
+					if(!isError && (!clsDef.isA5 || !clsDef.doesExtend(a5.Attribute)))
+						isError = true;
+					else if(clsDef.doesExtend(a5.AspectAttribute))
+						isAspect = true;
 					if(isError)
 						return a5.ThrowError(303);
 				} else {
@@ -245,11 +213,13 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 			attributes[i] = [arr[0], vals];
 			attrObj[arr[0].className()] = vals;
 		}
+		
 		attrObj.wrappedMethod = method;
 			
 		var proxyFunc = function(){
 			var callOriginator,
 				prop,
+				pCaller,
 				attrClasses = [], 
 				executionScope = this,
 				callOriginator,
@@ -257,8 +227,13 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 			if(method)
 				for(var prop in proxyFunc)
 					method[prop] = proxyFunc[prop];
-			if (proxyFunc.caller.getClassInstance !== undefined)
-				callOriginator = proxyFunc.caller;
+			pCaller = proxyFunc.caller;
+			do{
+				if (pCaller.getClassInstance !== undefined)
+					callOriginator = pCaller;
+				else	
+					pCaller = pCaller.caller;
+			} while (pCaller !== null && !callOriginator);
 			for(var i = 0, l = attributes.length; i<l; i++){
 				var cls = attributes[i][0],
 					clsInst = cls.instance(true),
@@ -266,34 +241,37 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 				attrClasses.push({cls:clsInst, props:props});
 			}
 			
-			var processCB = function(args, isPost, preArgs){
-				processAttribute(count, args, isPost, preArgs);
+			var processCB = function(args, isAfter, beforeArgs){
+				processAttribute(count, args, isAfter, beforeArgs);
 			},
 			
-			processAttribute = function(id, args, isPost, preArgs){
+			processAttribute = function(id, args, isAfter, beforeArgs){
 				if (args) {
 					if (Object.prototype.toString.call(args) !== '[object Array]') 
 						args = [args];
 				} else {
 					args = [];
 				}
-				if(!preArgs)
-					preArgs = args;
+				if(!beforeArgs)
+					beforeArgs = args;
 				if (id >= attrClasses.length) {
-					if (isPost) {
+					if (isAfter) {
 						return args[0];
 					} else 						
-						return processPost(args, preArgs);
+						return processAfter(args, beforeArgs);
 				}
 				var ret, 
-					isPost = isPost || false,
+					isAfter = isAfter || false,
+					isAround = false,
 					isAsync = false,
 					callback = function(_args){
-						processCB.call(this, _args || args, isPost, preArgs);	
+						processCB.call(this, _args || args, isAfter, beforeArgs);	
 					}	
-					ret = attrClasses[id].cls.around(attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, preArgs);
+					ret = attrClasses[id].cls.around(attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, beforeArgs);
 					if(ret === a5.AspectAttribute.NOT_IMPLEMENTED)
-						ret = attrClasses[id].cls[(isPost ? "after" : "before")](attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, preArgs);
+						ret = attrClasses[id].cls[(isAfter ? "after" : "before")](attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, beforeArgs);
+					else
+						isAround = true;
 				if (ret !== null && ret !== undefined) {
 					switch(ret){
 						case a5.Attribute.SUCCESS:
@@ -309,20 +287,22 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 							return;
 					}
 				} else
-					return a5.ThrowError(308, null, {prop:prop, method:isPost ? 'methodPost' : 'methodPre'});
+					return a5.ThrowError(308, null, {prop:prop, method:isAround ? 'around' : (isAfter ? 'after' : 'before')});
 				count = id+1;
 				if(!isAsync)
-					return processAttribute(count, ret, isPost, args, preArgs);
+					return processAttribute(count, ret, isAfter, args, beforeArgs);
 			},
 			
-			processPost = function(args, preArgs){
+			processAfter = function(args, beforeArgs){
 				count = 0;
-				var postRet = method ? method.apply(executionScope, args) : args.length ? args[0] : undefined;
+				var postRet = method ? method.apply(executionScope, args) : undefined;
+				if(postRet !== undefined)
+					postRet = [postRet];
+				else
+					postRet = args;
 				return processAttribute(0, postRet, true, preArgs);
-			},		
-			
-			preRet = processAttribute(count, Array.prototype.slice.call(arguments));
-			return preRet;
+			}			
+			return processAttribute(count, Array.prototype.slice.call(arguments));
 		}
 		proxyFunc._a5_attributes = attrObj;
 		return proxyFunc;
@@ -346,13 +326,14 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 });
 
 
+
 a5.SetNamespace('a5.core.classBuilder', true, function(){
 	
 	var packageQueue = [],
 		delayProtoCreation = false,
 		queuedPrototypes = [],
 		queuedImplementValidations = [],
-		prop;
+		prop,
 	
 	Create = function(classRef, args){
 		var ref, retObj;
@@ -461,6 +442,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		var imports, clsName, 
 		cls, base, type, proto, 
 		implement, mixins,
+		attribs = null,
 		staticMethods = false,
 		isMixin = false, 
 		isInterface = false, 
@@ -474,6 +456,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 						clsName:clsName, 
 						cls:cls, 
 						base:base, 
+						attribs:attribs,
 						type:type, 
 						proto:proto, 
 						implement:implement,
@@ -529,10 +512,25 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 			process();
 		},
 		
-		Mixin = function(str, $cls){
-			clsName = str;
-			cls = $cls,
+		Mixin = function(){
 			isMixin = true;
+			var args = Array.prototype.slice.call(arguments);
+			clsName = args[0];
+			for(var i = 1, l = args.length; i<l; i++){
+				switch(typeof args[i]){
+					case 'string':
+						type = args[i];
+						break;
+					case 'object':
+						if(Object.prototype.toString.call(args[i]) === '[object Array]')
+							attribs = args[i];
+						else
+						break;
+					case 'function':
+						cls = args[i];
+						break;
+				}
+			}
 			process();
 		},
 		
@@ -542,20 +540,45 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 			process();			
 		},
 		
-		Class = function(str, $cls, $prop3){
-			clsName = str;
-			var hasType = (typeof $cls === 'string');
-			cls = hasType ? $prop3:$cls;
-			type = hasType ? $cls:undefined;
+		Class = function(){
+			var args = Array.prototype.slice.call(arguments);
+			clsName = args[0];
+			for(var i = 1, l = args.length; i<l; i++){
+				switch(typeof args[i]){
+					case 'string':
+						type = args[i];
+						break;
+					case 'object':
+						if(Object.prototype.toString.call(args[i]) === '[object Array]')
+							attribs = args[i];
+						break;
+					case 'function':
+						cls = args[i];
+						break;
+				}
+			}
 			process();
 		},
 		
-		Prototype = function(str, $cls, $prop3){
+		Prototype = function(){
 			isProto = true;
-			clsName = str;
-			var hasType = (typeof $cls === 'string');
-			proto = hasType ? $prop3:$cls;
-			type = hasType ? $cls:undefined;
+			var args = Array.prototype.slice.call(arguments);
+			clsName = args[0];
+			for(var i = 1, l = args.length; i<l; i++){
+				switch(typeof args[i]){
+					case 'string':
+						type = args[i];
+						break;
+					case 'object':
+						if(Object.prototype.toString.call(args[i]) === '[object Array]')
+							attribs = args[i];
+						else
+						break;
+					case 'function':
+						proto = args[i];
+						break;
+				}
+			}
 			process();
 		}
 		
@@ -679,6 +702,8 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 			isValid = true, i, l;
 		if(pkgObj.staticMethods)
 			pkgObj.staticMethods(obj, imports());
+		/*if(pkgObj.attribs)
+			a5.core.attributes.applyClassAttribs(obj, pkgObj.attribs);*/
 		if (pkgObj.proto && delayProtoCreation) {
 			queuedPrototypes.push({obj:obj, pkgObj:pkgObj});
 			if(pkgObj.implement)
@@ -770,7 +795,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 				var obj;
 				for (prop in procObj) {
 					obj = procObj[prop];
-					if (typeof obj === 'function' && obj.namespace != undefined && retObj[prop] === undefined) retObj[prop] = obj;
+					if ((typeof obj === 'function' || typeof obj === 'object') && retObj[prop] === undefined) retObj[prop] = obj;
 				}
 			};
 			
@@ -800,10 +825,13 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 					if (str.charAt(str.length - 1) == '*') isWC = true;
 					if (isWC) {
 						pkg = a5.GetNamespace(str.substr(0, str.length - 2), null, true);
-						processObj(pkg);
+						if(pkg)
+							processObj(pkg);
+						else
+							rebuildArray.push(str);
 					} else {
 						clsName = dotIndex > -1 ? str.substr(dotIndex + 1) : str;
-						var obj = a5.GetNamespace(str);
+						var obj = a5.GetNamespace(str, null, true);
 						if (obj) {
 							if (retObj[clsName] === undefined)
 								retObj[clsName] = obj;
@@ -886,9 +914,9 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		doesExtend:function(cls){ return a5.core.verifiers.checkExtends(this, cls); },
 		doesMix:function(cls){ return a5.core.verifiers.checkMixes(this, cls); },
 		getAttributes:function(){ return this._a5_attributes; },
-		instance:function(autoCreate){
+		instance:function(autoCreate, args){
 			if (autoCreate === true)
-				return this._a5_instance || a5.Create(this);
+				return this._a5_instance || a5.Create(this, args);
 			else
 				return this._a5_instance;
 		},
@@ -961,6 +989,14 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		
 		mix:function(cls){
 			a5.core.mixins.applyMixins(this, cls, this.imports(), this);
+		},
+		
+		getAttributes:function(){
+			return this.constructor.getAttributes();
+		},
+		
+		getAttributeValue:function(value){
+			return this.constructor.getAttributeValue(value);
 		},
 		
 		getMethods:function(includeInherited, includePrivate){
@@ -1396,8 +1432,8 @@ a5.SetNamespace('a5.core.mixins', {
 							return a5.ThrowError(401, null, {nm:mixinRef[i].namespace(), cls:cls});
 					}
 				}
-				if (typeof mixinRef[i].mixinReady === 'function') 
-					mixinRef[i].mixinReady.call(scope);
+				if (typeof mixinRef[i]._mixinDef.mixinReady === 'function') 
+					mixinRef[i]._mixinDef.mixinReady.call(scope);
 			}
 		}
 	},
@@ -1490,6 +1526,16 @@ a5.Package('a5')
 
 a5.Package('a5')
 
+	.Static('AttributeTarget', function(AttributeTarget){
+		
+		AttributeTarget.ALL = '_a5_attrTargAll';
+		AttributeTarget.METHOD = '_a5_attrTargMethod';
+		AttributeTarget.CLASS = '_a5_attrTargClass';
+			
+})	
+
+a5.Package('a5')
+
 	.Extends('Attribute')
 	.Prototype('AspectAttribute', function(cls, im, AspectAttribute){
 		
@@ -1509,16 +1555,6 @@ a5.Package('a5')
 		
 		cls.around = function(){ return AspectAttribute.NOT_IMPLEMENTED; }
 });
-
-a5.Package('a5')
-
-	.Static('AspectAttributeTarget', function(AspectAttributeTarget){
-		
-		AspectAttributeTarget.ALL = '_a5_aspectTargAll';
-		AspectAttributeTarget.METHOD = '_a5_aspectTargMethod';
-		AspectAttributeTarget.CLASS = '_a5_aspectTargClass';
-			
-})	
 
 
 
@@ -1735,7 +1771,7 @@ a5.Package('a5')
 				scope[typeRules[0].property] = args[0];
 				return a5.AspectAttribute.SUCCESS;
 			}
-			var retVal = scope[typeRules[0].property];
+			var retVal = scope[typeRules[0].property] || null;
 			return retVal === null ? a5.AspectAttribute.RETURN_NULL : retVal;
 		}	
 		

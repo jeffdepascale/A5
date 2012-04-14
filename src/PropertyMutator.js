@@ -26,7 +26,7 @@ a5.Package('a5')
 				return a5.AspectAttribute.SUCCESS;
 			}
 			var retVal = scope[typeRules[0].property] || null;
-			return retVal === null ? a5.AspectAttribute.RETURN_NULL : retVal;
+			return retVal === null || retVal === undefined ? a5.AspectAttribute.RETURN_NULL : retVal;
 		}	
 		
 		cls.Override.after = function(typeRules, args, scope, method, callback, callOriginator, preArgs){

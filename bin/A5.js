@@ -300,7 +300,7 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 					postRet = [postRet];
 				else
 					postRet = args;
-				return processAttribute(0, postRet, true, preArgs);
+				return processAttribute(0, postRet, true, beforeArgs);
 			}			
 			return processAttribute(count, Array.prototype.slice.call(arguments));
 		}
@@ -313,15 +313,21 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 			a5.Create(a5.Attribute._extenderRef[i]);
 	},
 	
-	processInstance = function(cls){
-		var attrs = cls.getClass().getAttributes();
-		//process instanceProcess, return
-		return cls;
+	applyClassAttribs = function(cls, attribs){
+		for(var prop in attribs)
+		for (var prop in cls) 
+			if (cls.hasOwnProperty(prop) && typeof cls[prop] === 'function') {
+				var method = cls[prop],
+					appliedAttribs = Array.prototype.slice.call(attribs);
+					appliedAttribs.push(method);
+					cls[prop] = a5.core.attributes.createAttribute(cls, appliedAttribs);
+					a5.core.reflection.setReflection(cls.constructor, cls, prop, cls[prop]);
+				}
 	}
 	
 	return {
 		createAttribute:createAttribute,
-		processInstance:processInstance
+		applyClassAttribs:applyClassAttribs
 	}
 });
 
@@ -522,9 +528,10 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 						type = args[i];
 						break;
 					case 'object':
-						if(Object.prototype.toString.call(args[i]) === '[object Array]')
-							attribs = args[i];
-						else
+						if (Object.prototype.toString.call(args[i]) === '[object Array]') {
+							if(!attribs) attribs = [];
+							attribs.push(args[i]);
+						}
 						break;
 					case 'function':
 						cls = args[i];
@@ -549,8 +556,10 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 						type = args[i];
 						break;
 					case 'object':
-						if(Object.prototype.toString.call(args[i]) === '[object Array]')
-							attribs = args[i];
+						if (Object.prototype.toString.call(args[i]) === '[object Array]') {
+							if(!attribs) attribs = [];
+							attribs.push(args[i]);
+						}
 						break;
 					case 'function':
 						cls = args[i];
@@ -570,9 +579,10 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 						type = args[i];
 						break;
 					case 'object':
-						if(Object.prototype.toString.call(args[i]) === '[object Array]')
-							attribs = args[i];
-						else
+						if (Object.prototype.toString.call(args[i]) === '[object Array]') {
+							if(!attribs) attribs = [];
+							attribs.push(args[i]);
+						}
 						break;
 					case 'function':
 						proto = args[i];
@@ -587,7 +597,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		return {Enum:Enum, Static:Static, Import:Import, Extends:Extends, Mixin:Mixin, Mix:Mix, Implements:Implements, Class:Class, Prototype:Prototype, Interface:Interface};
 	},
 	
-	Extend = function(namespace, base, clsDef, type, isInterface, isProto, imports, mixins){
+	Extend = function(namespace, base, clsDef, type, isInterface, isProto, imports, mixins, attribs){
 		if(isInterface){
 			if (base && !base.isInterface())
 				return a5.ThrowError('Interface "' + namespace + '" cannot extend "' + base.namespace() + '", base class is not an interface.');
@@ -649,6 +659,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		eProtoConst._a5_isSingleton = isSingleton;
 		eProtoConst._a5_isInterface = isInterface;
 		eProtoConst._a5_isPrototype = isProto || false;
+		eProtoConst._a5_attribs = attribs;
 		eProtoConst._mixinRef = base.prototype.constructor._mixinRef ? base.prototype.constructor._mixinRef.slice(0) : [];
 		eProtoConst._implementsRef =  base.prototype.constructor._implementsRef ? base.prototype.constructor._implementsRef.slice(0) : [];
 		eProtoConst._a5_mixedMethods = {};
@@ -697,13 +708,11 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	processClass = function(pkgObj, $fromQueue){
 		var imports = function(){ return _a5_processImports(pkgObj.imports, pkgObj.pkg); },
 			base = (typeof pkgObj.base === 'function') ? pkgObj.base : a5.GetNamespace(pkgObj.base, imports()),
-			obj = Extend(pkgObj.pkg + '.' + pkgObj.clsName, base, pkgObj.cls, pkgObj.type, pkgObj.isInterface, pkgObj.isProto, imports, pkgObj.mixins),
+			obj = Extend(pkgObj.pkg + '.' + pkgObj.clsName, base, pkgObj.cls, pkgObj.type, pkgObj.isInterface, pkgObj.isProto, imports, pkgObj.mixins, pkgObj.attribs),
 			fromQueue = $fromQueue || false,
 			isValid = true, i, l;
 		if(pkgObj.staticMethods)
 			pkgObj.staticMethods(obj, imports());
-		/*if(pkgObj.attribs)
-			a5.core.attributes.applyClassAttribs(obj, pkgObj.attribs);*/
 		if (pkgObj.proto && delayProtoCreation) {
 			queuedPrototypes.push({obj:obj, pkgObj:pkgObj});
 			if(pkgObj.implement)
@@ -1015,15 +1024,16 @@ a5.SetNamespace('a5.core.classProxyObj',{
 			checkInAncestor = function(obj, prop){
 				var descenderRef = obj;
 				while (descenderRef !== null) {
-					if (descenderRef.constructor._a5_protoProps !== undefined) {
+					var dConst = descenderRef.constructor;
+					if (dConst._a5_protoProps !== undefined) {
 						var ref = {};
-						descenderRef.constructor._a5_protoProps.call(ref);
+						dConst._a5_protoProps.call(ref);
 						if (ref[prop] !== undefined)
 							return true;
 					}
-					descenderRef = descenderRef.constructor.superclass && 
-									descenderRef.constructor.superclass().constructor.namespace ? 
-									descenderRef.constructor.superclass() : null;
+					descenderRef = dConst.superclass && 
+									dConst.superclass().constructor.namespace ? 
+									dConst.superclass() : null;
 				}
 				return false;
 			}
@@ -1141,17 +1151,19 @@ a5.SetNamespace('a5.core.classProxyObj',{
 				var descenderRef = this,
 					instanceRef,
 					nextRef,
-					mixinRef,					prop,
+					mixinRef,					
+					prop,
 					i, l;
 				while (descenderRef !== null) {
-					mixinRef = descenderRef.constructor._mixinRef;
+					var dConst = descenderRef.constructor;
+					mixinRef = dConst._mixinRef;
 					if(mixinRef && mixinRef.length){
 						for (i = 0, l = mixinRef.length; i < l; i++)
 							if(mixinRef[i]._mixinDef.dealloc != undefined)
 								mixinRef[i]._mixinDef.dealloc.call(this);
 					}
-					if (descenderRef.constructor.namespace) {
-						nextRef = descenderRef.constructor.superclass ? descenderRef.constructor.superclass() : null;
+					if (dConst.namespace) {
+						nextRef = dConst.superclass ? dConst.superclass() : null;
 						if (nextRef && nextRef.dealloc !== descenderRef.dealloc) descenderRef.dealloc.call(this);
 						descenderRef = nextRef;
 					} else {
@@ -1192,16 +1204,19 @@ a5.SetNamespace('a5.core.classProxyObj',{
 				if (typeof this.constructor._a5_instanceConst !== 'function')
 					return a5.ThrowError(218, null, {clsName:this.className()});
 				while (descenderRef !== null) {
-					if (descenderRef.constructor._a5_protoPrivateProps !== undefined) {
+					var dConst = descenderRef.constructor;
+					if (dConst._a5_attribs)
+						a5.core.attributes.applyClassAttribs(this, dConst._a5_attribs);
+					if (dConst._a5_protoPrivateProps !== undefined) {
 						this._a5_privatePropsRef[descenderRef.namespace()] = {};
-						descenderRef.constructor._a5_protoPrivateProps.call(this._a5_privatePropsRef[descenderRef.namespace()]);
+						dConst._a5_protoPrivateProps.call(this._a5_privatePropsRef[descenderRef.namespace()]);
 					}
-					if(descenderRef.constructor._a5_protoProps !== undefined)
-						protoPropRef.unshift(descenderRef.constructor._a5_protoProps);
+					if(dConst._a5_protoProps !== undefined)
+						protoPropRef.unshift(dConst._a5_protoProps);
 						
-					descenderRef = descenderRef.constructor.superclass && 
-									descenderRef.constructor.superclass().constructor.namespace ? 
-									descenderRef.constructor.superclass() : null;
+					descenderRef = dConst.superclass && 
+									dConst.superclass().constructor.namespace ? 
+									dConst.superclass() : null;
 				}
 				a5.core.mixins.initializeMixins(this);
 				for(i = 0, l = protoPropRef.length; i<l; i++)
@@ -1526,16 +1541,6 @@ a5.Package('a5')
 
 a5.Package('a5')
 
-	.Static('AttributeTarget', function(AttributeTarget){
-		
-		AttributeTarget.ALL = '_a5_attrTargAll';
-		AttributeTarget.METHOD = '_a5_attrTargMethod';
-		AttributeTarget.CLASS = '_a5_attrTargClass';
-			
-})	
-
-a5.Package('a5')
-
 	.Extends('Attribute')
 	.Prototype('AspectAttribute', function(cls, im, AspectAttribute){
 		
@@ -1772,7 +1777,7 @@ a5.Package('a5')
 				return a5.AspectAttribute.SUCCESS;
 			}
 			var retVal = scope[typeRules[0].property] || null;
-			return retVal === null ? a5.AspectAttribute.RETURN_NULL : retVal;
+			return retVal === null || retVal === undefined ? a5.AspectAttribute.RETURN_NULL : retVal;
 		}	
 		
 		cls.Override.after = function(typeRules, args, scope, method, callback, callOriginator, preArgs){

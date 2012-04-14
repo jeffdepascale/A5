@@ -145,7 +145,7 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 					postRet = [postRet];
 				else
 					postRet = args;
-				return processAttribute(0, postRet, true, preArgs);
+				return processAttribute(0, postRet, true, beforeArgs);
 			}			
 			return processAttribute(count, Array.prototype.slice.call(arguments));
 		}
@@ -158,14 +158,20 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 			a5.Create(a5.Attribute._extenderRef[i]);
 	},
 	
-	processInstance = function(cls){
-		var attrs = cls.getClass().getAttributes();
-		//process instanceProcess, return
-		return cls;
+	applyClassAttribs = function(cls, attribs){
+		for(var prop in attribs)
+		for (var prop in cls) 
+			if (cls.hasOwnProperty(prop) && typeof cls[prop] === 'function') {
+				var method = cls[prop],
+					appliedAttribs = Array.prototype.slice.call(attribs);
+					appliedAttribs.push(method);
+					cls[prop] = a5.core.attributes.createAttribute(cls, appliedAttribs);
+					a5.core.reflection.setReflection(cls.constructor, cls, prop, cls[prop]);
+				}
 	}
 	
 	return {
 		createAttribute:createAttribute,
-		processInstance:processInstance
+		applyClassAttribs:applyClassAttribs
 	}
 });

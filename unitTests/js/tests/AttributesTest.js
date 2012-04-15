@@ -49,7 +49,7 @@ a5.Package('a5.unitTest.tests')
 			
 			a5.Package('a5.unitTest.testClasses.attributes')
 
-				.Class('AttrTest2', ['Test'], function(cls, im){
+				.Class('AttrTest2', ['Test', {include:'meth*'}], function(cls, im){
 					
 					cls.AttrTest2 = function(){
 					}

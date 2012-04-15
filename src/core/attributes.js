@@ -158,16 +158,67 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 			a5.Create(a5.Attribute._extenderRef[i]);
 	},
 	
+	validMName = function(methodName, str){
+		var split = str.split('|');
+		for(var i = 0, l=split.length; i<l; i++){
+			var r = split[i],
+				beginW = r.charAt(0) === '*',
+				endW = r.charAt(r.length-1) === '*',
+				index = methodName.indexOf(r),
+				isMatch = index !== -1;
+			if (isMatch)
+				return true;
+			if(beginW && methodName.indexOf(r.substr(1)) === 0)
+				return true;
+			if(endW && methodName.indexOf(r.substr(0, r.length-1)) > -1)
+				return true;
+		}
+		return false;
+	}
+	
 	applyClassAttribs = function(cls, attribs){
-		for(var prop in attribs)
-		for (var prop in cls) 
-			if (cls.hasOwnProperty(prop) && typeof cls[prop] === 'function') {
-				var method = cls[prop],
-					appliedAttribs = Array.prototype.slice.call(attribs);
-					appliedAttribs.push(method);
-					cls[prop] = a5.core.attributes.createAttribute(cls, appliedAttribs);
-					a5.core.reflection.setReflection(cls.constructor, cls, prop, cls[prop]);
+		var methods = cls.getMethods(),
+			slice = Array.prototype.slice;
+		for (var i = 0, l = methods.length; i < l; i++) {
+			var methodName = methods[i],
+					method = cls[methodName],
+					appliedAttribs = [];
+			for(var j = 0, k=attribs.length; j<k; j++){	
+				var attr = slice.call(attribs[j]);
+				if (attr.length > 1) {
+					var ruleObj = attr[attr.length-1],
+						validRuleObj = false,
+						validMethod = true,
+						incl = ruleObj.include,
+						excl = ruleObj.exclude;
+					if(incl !== undefined){
+						validRuleObj = true;
+						if(typeof incl === 'object')
+							validMethod = methodName.match(incl).length > 0;
+						else
+							validMethod = validMName(methodName, incl);
+					}
+					if(excl !== undefined){
+						validRuleObj = true;
+						if(typeof excl === 'object')
+							validMethod = methodName.match(excl);
+						else
+							validMethod = validMName(methodName, excl);
+					}
+					if(validRuleObj)
+						attr.pop();
+					if(validMethod)
+						appliedAttribs.push(attr);
+				} else {
+					appliedAttribs.push(attr);
 				}
+			}
+			if (appliedAttribs.length) {
+				appliedAttribs.push(method);
+				cls[methodName] = a5.core.attributes.createAttribute(cls, appliedAttribs);
+				a5.core.reflection.setReflection(cls.constructor, cls, methodName, cls[methodName]);
+			}
+		}
 	}
 	
 	return {

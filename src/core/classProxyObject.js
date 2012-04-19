@@ -115,15 +115,16 @@ a5.SetNamespace('a5.core.classProxyObj',{
 			checkInAncestor = function(obj, prop){
 				var descenderRef = obj;
 				while (descenderRef !== null) {
-					if (descenderRef.constructor._a5_protoProps !== undefined) {
+					var dConst = descenderRef.constructor;
+					if (dConst._a5_protoProps !== undefined) {
 						var ref = {};
-						descenderRef.constructor._a5_protoProps.call(ref);
+						dConst._a5_protoProps.call(ref);
 						if (ref[prop] !== undefined)
 							return true;
 					}
-					descenderRef = descenderRef.constructor.superclass && 
-									descenderRef.constructor.superclass().constructor.namespace ? 
-									descenderRef.constructor.superclass() : null;
+					descenderRef = dConst.superclass && 
+									dConst.superclass().constructor.namespace ? 
+									dConst.superclass() : null;
 				}
 				return false;
 			}
@@ -241,17 +242,19 @@ a5.SetNamespace('a5.core.classProxyObj',{
 				var descenderRef = this,
 					instanceRef,
 					nextRef,
-					mixinRef,					prop,
+					mixinRef,					
+					prop,
 					i, l;
 				while (descenderRef !== null) {
-					mixinRef = descenderRef.constructor._mixinRef;
+					var dConst = descenderRef.constructor;
+					mixinRef = dConst._mixinRef;
 					if(mixinRef && mixinRef.length){
 						for (i = 0, l = mixinRef.length; i < l; i++)
 							if(mixinRef[i]._mixinDef.dealloc != undefined)
 								mixinRef[i]._mixinDef.dealloc.call(this);
 					}
-					if (descenderRef.constructor.namespace) {
-						nextRef = descenderRef.constructor.superclass ? descenderRef.constructor.superclass() : null;
+					if (dConst.namespace) {
+						nextRef = dConst.superclass ? dConst.superclass() : null;
 						if (nextRef && nextRef.dealloc !== descenderRef.dealloc) descenderRef.dealloc.call(this);
 						descenderRef = nextRef;
 					} else {
@@ -292,16 +295,19 @@ a5.SetNamespace('a5.core.classProxyObj',{
 				if (typeof this.constructor._a5_instanceConst !== 'function')
 					return a5.ThrowError(218, null, {clsName:this.className()});
 				while (descenderRef !== null) {
-					if (descenderRef.constructor._a5_protoPrivateProps !== undefined) {
+					var dConst = descenderRef.constructor;
+					if (dConst._a5_attribs)
+						a5.core.attributes.applyClassAttribs(this, dConst._a5_attribs);
+					if (dConst._a5_protoPrivateProps !== undefined) {
 						this._a5_privatePropsRef[descenderRef.namespace()] = {};
-						descenderRef.constructor._a5_protoPrivateProps.call(this._a5_privatePropsRef[descenderRef.namespace()]);
+						dConst._a5_protoPrivateProps.call(this._a5_privatePropsRef[descenderRef.namespace()]);
 					}
-					if(descenderRef.constructor._a5_protoProps !== undefined)
-						protoPropRef.unshift(descenderRef.constructor._a5_protoProps);
+					if(dConst._a5_protoProps !== undefined)
+						protoPropRef.unshift(dConst._a5_protoProps);
 						
-					descenderRef = descenderRef.constructor.superclass && 
-									descenderRef.constructor.superclass().constructor.namespace ? 
-									descenderRef.constructor.superclass() : null;
+					descenderRef = dConst.superclass && 
+									dConst.superclass().constructor.namespace ? 
+									dConst.superclass() : null;
 				}
 				a5.core.mixins.initializeMixins(this);
 				for(i = 0, l = protoPropRef.length; i<l; i++)

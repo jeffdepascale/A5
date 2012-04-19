@@ -30,23 +30,37 @@ a5.Package('a5.unitTest.tests')
 			
 			a5.Package('a5.unitTest.testClasses.attributes')
 			
-				.Extends('a5.Attribute')
+				.Extends('a5.AspectAttribute')
 				.Class('TestAttribute', function(cls){
 					
 					cls.TestAttribute = function(){
 						cls.superclass(this);
+					}
+					
+					cls.Override.before = function(){
+						return a5.AspectAttribute.SUCCESS;
+					}
+					
+					cls.Override.after = function(){
+						return a5.AspectAttribute.SUCCESS;
 					}
 				})
 			
 			
 			a5.Package('a5.unitTest.testClasses.attributes')
 
-				.Class('AttrTest2', ['Test'], function(cls, im){
+				.Class('AttrTest2', ['Test', {include:'meth*'}], function(cls, im){
 					
 					cls.AttrTest2 = function(){
-						cls.superclass(this);
+					}
+					
+					cls.method = function(){
 					}
 				});
+			
+			var attrTest2 = cls.create(a5.unitTest.testClasses.attributes.AttrTest2);
+			cls.assert(attrTest2.method.getAttributes().TestAttribute !== null, 'failed');
+			attrTest2.method();
 		}
 		
 })	

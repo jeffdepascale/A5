@@ -194,9 +194,10 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 						type = args[i];
 						break;
 					case 'object':
-						if(Object.prototype.toString.call(args[i]) === '[object Array]')
-							attribs = args[i];
-						else
+						if (Object.prototype.toString.call(args[i]) === '[object Array]') {
+							if(!attribs) attribs = [];
+							attribs.push(args[i]);
+						}
 						break;
 					case 'function':
 						cls = args[i];
@@ -221,8 +222,10 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 						type = args[i];
 						break;
 					case 'object':
-						if(Object.prototype.toString.call(args[i]) === '[object Array]')
-							attribs = args[i];
+						if (Object.prototype.toString.call(args[i]) === '[object Array]') {
+							if(!attribs) attribs = [];
+							attribs.push(args[i]);
+						}
 						break;
 					case 'function':
 						cls = args[i];
@@ -242,9 +245,10 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 						type = args[i];
 						break;
 					case 'object':
-						if(Object.prototype.toString.call(args[i]) === '[object Array]')
-							attribs = args[i];
-						else
+						if (Object.prototype.toString.call(args[i]) === '[object Array]') {
+							if(!attribs) attribs = [];
+							attribs.push(args[i]);
+						}
 						break;
 					case 'function':
 						proto = args[i];
@@ -259,7 +263,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		return {Enum:Enum, Static:Static, Import:Import, Extends:Extends, Mixin:Mixin, Mix:Mix, Implements:Implements, Class:Class, Prototype:Prototype, Interface:Interface};
 	},
 	
-	Extend = function(namespace, base, clsDef, type, isInterface, isProto, imports, mixins){
+	Extend = function(namespace, base, clsDef, type, isInterface, isProto, imports, mixins, attribs){
 		if(isInterface){
 			if (base && !base.isInterface())
 				return a5.ThrowError('Interface "' + namespace + '" cannot extend "' + base.namespace() + '", base class is not an interface.');
@@ -321,6 +325,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		eProtoConst._a5_isSingleton = isSingleton;
 		eProtoConst._a5_isInterface = isInterface;
 		eProtoConst._a5_isPrototype = isProto || false;
+		eProtoConst._a5_attribs = attribs;
 		eProtoConst._mixinRef = base.prototype.constructor._mixinRef ? base.prototype.constructor._mixinRef.slice(0) : [];
 		eProtoConst._implementsRef =  base.prototype.constructor._implementsRef ? base.prototype.constructor._implementsRef.slice(0) : [];
 		eProtoConst._a5_mixedMethods = {};
@@ -369,13 +374,11 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	processClass = function(pkgObj, $fromQueue){
 		var imports = function(){ return _a5_processImports(pkgObj.imports, pkgObj.pkg); },
 			base = (typeof pkgObj.base === 'function') ? pkgObj.base : a5.GetNamespace(pkgObj.base, imports()),
-			obj = Extend(pkgObj.pkg + '.' + pkgObj.clsName, base, pkgObj.cls, pkgObj.type, pkgObj.isInterface, pkgObj.isProto, imports, pkgObj.mixins),
+			obj = Extend(pkgObj.pkg + '.' + pkgObj.clsName, base, pkgObj.cls, pkgObj.type, pkgObj.isInterface, pkgObj.isProto, imports, pkgObj.mixins, pkgObj.attribs),
 			fromQueue = $fromQueue || false,
 			isValid = true, i, l;
 		if(pkgObj.staticMethods)
 			pkgObj.staticMethods(obj, imports());
-		/*if(pkgObj.attribs)
-			a5.core.attributes.applyClassAttribs(obj, pkgObj.attribs);*/
 		if (pkgObj.proto && delayProtoCreation) {
 			queuedPrototypes.push({obj:obj, pkgObj:pkgObj});
 			if(pkgObj.implement)

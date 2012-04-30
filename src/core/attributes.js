@@ -119,6 +119,7 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 						isAround = true;
 				if (ret !== null && ret !== undefined) {
 					switch(ret){
+						case a5.AspectAttribute.NOT_IMPLEMENTED:
 						case a5.Attribute.SUCCESS:
 							ret = args;
 							break;

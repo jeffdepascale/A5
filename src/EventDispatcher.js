@@ -95,7 +95,6 @@ a5.Package("a5")
 						if (listArray[j].method === method && 
 							listArray[j].type === types[i] && 
 							listArray[j].useCapture === useCapture && 
-							listArray[j].scope === scope && 
 							listArray[j].isOneTime === isOneTime) {
 								listArray.splice(j, 1);
 								m = listArray.length;

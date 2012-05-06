@@ -284,7 +284,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 
 		
 		
-		if (!base || base === undefined) base = genBaseFunc;
+		if (!base || base === undefined) base = (namespace == 'a5.Object' ? genBaseFunc : a5.Object);
 		extender = function(){};
 		
 		if (type) {

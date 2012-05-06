@@ -274,6 +274,7 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 						isAround = true;
 				if (ret !== null && ret !== undefined) {
 					switch(ret){
+						case a5.AspectAttribute.NOT_IMPLEMENTED:
 						case a5.Attribute.SUCCESS:
 							ret = args;
 							break;
@@ -669,7 +670,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 
 		
 		
-		if (!base || base === undefined) base = genBaseFunc;
+		if (!base || base === undefined) base = (namespace == 'a5.Object' ? genBaseFunc : a5.Object);
 		extender = function(){};
 		
 		if (type) {
@@ -1581,6 +1582,9 @@ a5.SetNamespace('a5.core.errorHandling', true, function(){
 a5.ThrowError = a5.core.errorHandling.ThrowError;
 a5._a5_getThrownError = a5.core.errorHandling._a5_getThrownError;
 
+/**
+ * Decorates classes and methods with meta information, accessible through reflection.
+ */
 a5.Package('a5')
 
 	.Prototype('Attribute', 'singleton', function(proto, im, Attribute){
@@ -1590,30 +1594,81 @@ a5.Package('a5')
 
 })
 
+/**
+ * Decorates methods with cross cutting logic.
+ */
 a5.Package('a5')
 
 	.Extends('Attribute')
 	.Prototype('AspectAttribute', function(cls, im, AspectAttribute){
 		
+		/**
+		 * Returned from aspect methods where an explicit null is the return value.
+		 */
 		AspectAttribute.RETURN_NULL = '_a5_aspectReturnsNull';
+		
+		/**
+		 * Returned from aspect methods when the test passes with no modification to the passed params.
+		 */
 		AspectAttribute.SUCCESS = '_a5_aspectSuccess';
+		
+		/**
+		 * Returned from aspect methods when a test method requires asynchronous processing. The callback param must be called to continue the aspect chain.
+		 */
 		AspectAttribute.ASYNC = '_a5_aspectAsync';
+		
+		/**
+		 * Returned from aspect methods when a test method fails processing.
+		 */
 		AspectAttribute.FAILURE = '_a5_aspectFailure';
+		
+		/**
+		 * Returned from aspect methods by default when a method is not overriden.
+		 */
 		AspectAttribute.NOT_IMPLEMENTED = '_a5_notImplemented';
 		
 		cls.AspectAttribute = function(){
 			cls.superclass(this);
 		}
 		
-		cls.before = function(){ return AspectAttribute.NOT_IMPLEMENTED; }
+		/**
+		 * Override to specify logic that should occur before the attributed method block is executed.
+		 * @param {Array} rules the rule parameters defined when the attribute was applied.
+		 * @param {Array} args the arguments being passed to the method.
+		 * @param {a5.Object} scope the scope of the method.
+		 * @param {Function} method the method definition, accessible for reflection purposes.
+		 * @param {Function} callback must be invoked with a return status when returning {@link AspectAttribute.ASYNC}. 
+		 * @param {Function} callOriginator when accessible, the object that made the call to the method.
+		 */
+		cls.before = function(rules, args, scope, method, callback, callOriginator){ return AspectAttribute.NOT_IMPLEMENTED; }
 		
-		cls.after = function(){ return AspectAttribute.NOT_IMPLEMENTED; }
+		/**
+		 * Override to specify logic that should occur after the attributed method block is executed.
+		 * @param {Array} rules the rule parameters defined when the attribute was applied.
+		 * @param {Array} args the arguments being passed to the method.
+		 * @param {a5.Object} scope the scope of the method.
+		 * @param {Function} method the method definition, accessible for reflection purposes.
+		 * @param {Function} callback must be invoked with a return status when returning {@link AspectAttribute.ASYNC}. 
+		 * @param {Function} callOriginator when accessible, the object that made the call to the method.
+		 */
+		cls.after = function(rules, args, scope, method, callback, callOriginator, beforeArgs){ return AspectAttribute.NOT_IMPLEMENTED; }
 		
+		/**
+		 * Override to specify logic that should occur both before and after the attributed method block is executed.
+		 * @param {Array} rules the rule parameters defined when the attribute was applied.
+		 * @param {Array} args the arguments being passed to the method.
+		 * @param {a5.Object} scope the scope of the method.
+		 * @param {Function} method the method definition, accessible for reflection purposes.
+		 * @param {Function} callback must be invoked with a return status when returning {@link AspectAttribute.ASYNC}. 
+		 * @param {Function} callOriginator when accessible, the object that made the call to the method.
+		 */
 		cls.around = function(){ return AspectAttribute.NOT_IMPLEMENTED; }
 });
 
 
-
+/**
+ * Strictly defines parameters for a method, and optionally overloaded parameter options.
+ */
 a5.Package('a5')
 
 	.Extends('AspectAttribute')
@@ -1800,6 +1855,10 @@ a5.Package('a5')
 
 })
 
+
+/**
+ * Applies cross cutting logic to a method to wrap getter and setter like functionality to a property in a Prototype class.
+ */
 a5.Package('a5')
 
 	.Extends('AspectAttribute')
@@ -1841,32 +1900,16 @@ a5.Package('a5')
 
 
 /**
- * @class 
- * @name a5.Event
+ * Base Event object in A5.
  */
 a5.Package('a5')
 
 	.Static(function(Event){
 		
-		/**#@+
-	 	 * @memberOf a5.Event
-		 */
-		
-		/**
-		 * @name DESTROYED
-		 * @constant
-		 */
 		Event.DESTROYED = 'Destroyed';
 		
-		/**#@-*/
 	})
 	.Prototype('Event', function(proto){
-		
-		/**#@+
-	 	 * @memberOf a5.Event#
-	 	 * @function
-		 */
-		
 		
 		proto.Event = function($type, $bubbles, $data){
 			this._a5_type = $type;
@@ -1883,8 +1926,7 @@ a5.Package('a5')
 		
 		/**
 		 * Cancels the propagation of the event. Once this method is called, any event listeners that have not yet processed this event instance will be ignored.
-		 * #name cancel
-		 * @param {Object} finishCurrentPhase If true, the event is allowed to finish dispatching in the current phase, but will be cancelled before the next phase begins.
+		 * @param {Boolean} finishCurrentPhase If true, the event is allowed to finish dispatching in the current phase, but will be cancelled before the next phase begins.
 		 */
 		proto.cancel = function(finishCurrentPhase){
 			if(finishCurrentPhase === true)
@@ -1895,34 +1937,30 @@ a5.Package('a5')
 		
 		/**
 		 * The object that dispatched this event.
-		 * @name target
-		 * @return {Object} The object that dispatched this event.
+		 * @return {a5.Object} The object that dispatched this event.
 		 */
 		proto.target = function(){ return this._a5_target; };
 		
 		/**
 		 * The object that is currently processing this event.
-		 * @name currentTarget
-		 * @return {Object} The object that is currently processing this event.
+		 * @return {a5.Object} The object that is currently processing this event.
 		 */
 		proto.currentTarget = function(){ return this._a5_currentTarget; };
 		
 		/**
 		 * The event type.
-		 * @name type
 		 * @return {String} The event type.
 		 */
 		proto.type = function(){ return this._a5_type; };
 		
 		/**
-		 * @name data
+		 * The data object passed along with the event dispatch, if present.
 		 * @return {Object}
 		 */
 		proto.data = function(){ return this._a5_data; };
 		
 		/**
 		 * The phase this event is currently in. (a5.Event.CAPTURING, a5.Event.AT_TARGET, or a5.Event.BUBBLING)
-		 * @name phase
 		 * @return {Number} The phase this event is currently in.
 		 */
 		proto.phase = function(){ return this._a5_phase; };
@@ -1930,17 +1968,15 @@ a5.Package('a5')
 		
 		/**
 		 * Whether this event should use the bubbling phase.  All events use capture and target phases.
-		 * @name bubbles
 		 */
 		proto.bubbles = function(){ return this._a5_bubbles; };
 		
 		/**
 		 * When shouldRetain is set to true, the event instance will not be destroyed after it has finished being dispatched.
-		 * Thsi defaults to false, and it is highly recommended that you do NOT set this to true unless the same event is being
+		 * This defaults to false, and it is recommended that you do NOT set this to true unless the same event is being
 		 * dispatched on a timer, and the instance can be reused.
 		 * 
-		 * @name shouldRetain
-		 * @param {Boolean} [value=false] If set to true, the event instance will not be destroyed after it has finished being dispatched.
+		 * @param {Boolean} [value] If set to true, the event instance will not be destroyed after it has finished being dispatched.
 		 */
 		proto.shouldRetain = function(value){
 			if(typeof value === 'boolean'){
@@ -1953,45 +1989,25 @@ a5.Package('a5')
 		proto.dealloc = function(){
 			this._a5_target = this._a5_currentTarget = null;
 		}
-		
-		/**#@-*/
 });
 
 /**
- * @class 
- * @name a5.EventPhase
+ * Defines event phases for an {@link a5.Event}.
  */
 a5.Package('a5')
 
 	.Static('EventPhase', function(EventPhase){
 		
-		/**#@+
-	 	 * @memberOf a5.EventPhase
-		 */
-		
-		/**
-		 * @name CAPTURING
-		 * @constant
-		 */
 		EventPhase.CAPTURING = 1;
 		
-		/**
-		 * @name AT_TARGET
-		 * @constant
-		 */
 		EventPhase.AT_TARGET = 2;
 		
-		/**
-		 * @name BUBBLING
-		 * @constant
-		 */
 		EventPhase.BUBBLING = 3;
 });
 
 
 /**
- * @class 
- * @name a5.Error
+ * Defines a custom A5 Error.
  */
 a5.Package('a5')
 
@@ -2000,10 +2016,6 @@ a5.Package('a5')
 		
 		Error.FORCE_CAST_ERROR = '_a5_forceCastError';
 		
-		/**#@+
-	 	 * @memberOf a5.Error#
-	 	 * @function
-		 */
 		this.Properties(function(){
 			this.stack = [];
 			this.message = "";
@@ -2057,13 +2069,13 @@ a5.Package('a5')
 			}
 		}
 		
+		/**
+		 * whether the error originated from a window onerror catch statement.
+		 */
 		proto.isWindowError = function(){
 			return this._a5_isWindowError;
 		}
 		
-		/**
-		 * @name toString
-		 */
 		proto.Override.toString = function () {
 		  return this.type + ': ' + this.message;
 		}
@@ -2071,9 +2083,7 @@ a5.Package('a5')
 
 
 /**
- * @class 
- * @name a5.AssertException
- * @extends a5.Error
+ * Exceptions thrown from assert statements.
  */
 a5.Package('a5')
 	.Extends('Error')
@@ -2087,9 +2097,7 @@ a5.Package('a5')
 });
 
 /**
- * @class 
- * @name a5.ContractException
- * @extends a5.Error
+ * Exceptions thrown from contract attributes.
  */
 a5.Package('a5')
 	.Extends('Error')
@@ -2104,18 +2112,18 @@ a5.Package('a5')
 
 
 /**
- * @class The EventDispatcher class defines a prototype object for handling listeners and dispatching events.
- * <br/><b>Abstract</b>
- * @name a5.EventDispatcher
+ * Handles event listeners and dispatches events.
  */
 a5.Package("a5")
 
-	.Prototype('EventDispatcher', 'abstract', function(proto){
+	.Static(function(EventDispatcher){
 		
-		/**#@+
-	 	 * @memberOf a5.EventDispatcher#
-	 	 * @function
-		 */
+		EventDispatcher.ADD = 'eventDispatcherAdd';
+		
+		EventDispatcher.REMOVE = 'eventDispatcherRemove';
+		
+	})
+	.Prototype('EventDispatcher', 'abstract', function(proto, im, EventDispatcher){
 		
 		this.Properties(function(){
 			this._a5_autoPurge = false;
@@ -2126,6 +2134,10 @@ a5.Package("a5")
 			
 		}
 		
+		/**
+		 * Returns whether autoPurge is enabled for the dispatcher. If enabled, event listeners will be removed automatically after a valid event is dispatched.
+		 * @param {Boolean} [value] If passed, sets the value for autoPurge.
+		 */
 		proto.autoPurge = function(value){
 			if(typeof value === 'boolean'){
 				this._a5_autoPurge = value;
@@ -2135,33 +2147,32 @@ a5.Package("a5")
 		}
 		
 		/**
-		 * Adds an event listener to the parent object.
-		 * @name addEventListener
+		 * Adds an event listener to the object.
 		 * @param {String} type The event type to be added.
-		 * @param {Object} method The associated listener method to be added.
+		 * @param {Function} method The associated listener method to be added.
 		 * @param {Boolean} [useCapture=false] If set to true, the listener will process the event in the capture phase.  Otherwise, it will process the event bubbling or target phase.
-		 * @param {Boolean} [scope=null]
+		 * @param {a5.Object} [scope=null] Applies a scope value for the listener method. This is important when listening from a prototype.
 		 */
 		proto.addEventListener = function(type, method, useCapture, scope){
 			this._a5_addEventListener(type, method, useCapture, scope);
 		}
 		
 		/**
-		 * Adds an event listener to the parent object that fires only once, then is removed.
-		 * @name addOneTimeEventListener
+		 * Adds an event listener to the object that fires only once, then is removed.
 		 * @param {String} type The event type to be added.
-		 * @param {Object} method The associated listener method to be added.
+		 * @param {Function} method The associated listener method to be added.
 		 * @param {Boolean} [useCapture=false] If set to true, the listener will process the event in the capture phase.  Otherwise, it will process the event bubbling or target phase.
-		 * @param {Boolean} [scope=null]
+		 * @param {a5.Object} [scope=null] Applies a scope value for the listener method. This is important when listening from a prototype.
 		 */
 		proto.addOneTimeEventListener = function(type, method, useCapture, scope){
 			this._a5_addEventListener(type, method, useCapture, scope, true);
 		}
 		
 		/**
-		 * @name hasEventListener
-		 * @param {String} type
-		 * @param {Object} [method]
+		 * Returns whether the object has a valid listener for the associated type, and optionaly a specified listener method.
+		 * @param {String} type The event type to check.
+		 * @param {Function} [method] A listener method reference.
+		 * @return {Boolean}
 		 */
 		proto.hasEventListener = function(type, method){
 			var types = type.split('|'),
@@ -2180,18 +2191,19 @@ a5.Package("a5")
 		
 		/**
 		 * Remove a listener from the parent object.
-		 * @name removeEventListener
 		 * @param {String} type The event type to be removed.
-		 * @param {Object} method The associated listener method to be removed.
+		 * @param {Function} method The associated listener method to be removed.
 		 * @param {Boolean} [useCapture=false] Whether the listener to remove is bound to the capture phase or the bubbling phase.
+		 * @param {a5.Object} [scope]
+		 * @param {Boolean} [isOneTime=false]
 		 */
-		proto.removeEventListener = function(type, method,  $useCapture, $scope, $isOneTime){
-			var scope = $scope || null,
-				types = type.split('|'),
-				isOneTime = $isOneTime || false,
-				useCapture = $useCapture === true,
+		proto.removeEventListener = function(type, method,  useCapture, scope, isOneTime){
+			var types = type.split('|'),
 				shouldPush = true,
 				i, l, listArray, j, m;
+			scope = scope || null;
+			isOneTime = isOneTime || false;
+			useCapture = useCapture === true;
 			for (i = 0, l = types.length; i < l; i++) {
 				listArray = this._a5_getListenerArray(types[i]);
 				if (listArray) {
@@ -2199,7 +2211,6 @@ a5.Package("a5")
 						if (listArray[j].method === method && 
 							listArray[j].type === types[i] && 
 							listArray[j].useCapture === useCapture && 
-							listArray[j].scope === scope && 
 							listArray[j].isOneTime === isOneTime) {
 								listArray.splice(j, 1);
 								m = listArray.length;
@@ -2209,14 +2220,14 @@ a5.Package("a5")
 						type: types.length > 1 ? types:types[0],
 						method: method,
 						useCapture: useCapture,
-						changeType: 'REMOVE'
+						changeType: EventDispatcher.REMOVE
 					});
 				}
 			}
 		}
 		
 		/**
-		 * @name removeAllListeners
+		 * Removes all existing listeners.
 		 */
 		proto.removeAllListeners = function(){
 			if(this._a5_listeners)
@@ -2225,7 +2236,6 @@ a5.Package("a5")
 		
 		/**
 		 * Returns the total number of listeners attached to the parent object.
-		 * @name getTotalListeners
 		 */
 		proto.getTotalListeners = function(type){
 			if (typeof type === 'string') {
@@ -2244,7 +2254,6 @@ a5.Package("a5")
 		
 		/**
 		 * Sends an event object to listeners previously added to the event chain. By default an event object with a target property is sent pointing to the sender. If a custom object is sent with a target property, this property will not be overridden.
-		 * @name dispatchEvent
 		 * @param {String|a5.Event} event The event object to dispatch.  Or, if a string is passed, the 'type' parameter of the event to dispatch. 
 		 */
 		proto.dispatchEvent = function(event, data, bubbles){
@@ -2258,11 +2267,10 @@ a5.Package("a5")
 		
 		/**
 		 * Override this method to be notified of listener addition or removal.
-		 * @name eListenersChange
 		 * @param {Object} e The event object
 		 * @param {String} e.type - The event type associated with the change.
 		 * @param {Object} e.method - The listener method associated with the change.
-		 * @param {String} e.changeType - Specifies what the type the change was, either 'ADD' or 'REMOVE'. 
+		 * @param {String} e.changeType - Specifies what the type the change was, either EventDispatcher.ADD or EventDispatcher.REMOVE. 
 		 */
 		proto.eListenersChange = function(e){}
 		
@@ -2301,7 +2309,7 @@ a5.Package("a5")
 				this.eListenersChange({
 					type: types.length > 1 ? types : types[0],
 					method: method,
-					changeType: 'ADD'
+					changeType: EventDispatcher.ADD
 				});
 			} else
 				throw 'invalid listener: type- ' + type + ', method- ' + method;
@@ -2358,6 +2366,7 @@ a5.Package("a5")
 		}
 		
 });
+
 
 a5.SetNamespace('a5.ErrorDefinitions', {
 	//100: root level

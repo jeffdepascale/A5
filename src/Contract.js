@@ -1,4 +1,6 @@
-
+/**
+ * Strictly defines parameters for a method, and optionally overloaded parameter options.
+ */
 a5.Package('a5')
 
 	.Extends('AspectAttribute')

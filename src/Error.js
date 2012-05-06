@@ -1,7 +1,6 @@
 
 /**
- * @class 
- * @name a5.Error
+ * Defines a custom A5 Error.
  */
 a5.Package('a5')
 
@@ -10,10 +9,6 @@ a5.Package('a5')
 		
 		Error.FORCE_CAST_ERROR = '_a5_forceCastError';
 		
-		/**#@+
-	 	 * @memberOf a5.Error#
-	 	 * @function
-		 */
 		this.Properties(function(){
 			this.stack = [];
 			this.message = "";
@@ -67,13 +62,13 @@ a5.Package('a5')
 			}
 		}
 		
+		/**
+		 * whether the error originated from a window onerror catch statement.
+		 */
 		proto.isWindowError = function(){
 			return this._a5_isWindowError;
 		}
 		
-		/**
-		 * @name toString
-		 */
 		proto.Override.toString = function () {
 		  return this.type + ': ' + this.message;
 		}

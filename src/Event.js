@@ -1,31 +1,15 @@
 
 /**
- * @class 
- * @name a5.Event
+ * Base Event object in A5.
  */
 a5.Package('a5')
 
 	.Static(function(Event){
 		
-		/**#@+
-	 	 * @memberOf a5.Event
-		 */
-		
-		/**
-		 * @name DESTROYED
-		 * @constant
-		 */
 		Event.DESTROYED = 'Destroyed';
 		
-		/**#@-*/
 	})
 	.Prototype('Event', function(proto){
-		
-		/**#@+
-	 	 * @memberOf a5.Event#
-	 	 * @function
-		 */
-		
 		
 		proto.Event = function($type, $bubbles, $data){
 			this._a5_type = $type;
@@ -42,8 +26,7 @@ a5.Package('a5')
 		
 		/**
 		 * Cancels the propagation of the event. Once this method is called, any event listeners that have not yet processed this event instance will be ignored.
-		 * #name cancel
-		 * @param {Object} finishCurrentPhase If true, the event is allowed to finish dispatching in the current phase, but will be cancelled before the next phase begins.
+		 * @param {Boolean} finishCurrentPhase If true, the event is allowed to finish dispatching in the current phase, but will be cancelled before the next phase begins.
 		 */
 		proto.cancel = function(finishCurrentPhase){
 			if(finishCurrentPhase === true)
@@ -54,34 +37,30 @@ a5.Package('a5')
 		
 		/**
 		 * The object that dispatched this event.
-		 * @name target
-		 * @return {Object} The object that dispatched this event.
+		 * @return {a5.Object} The object that dispatched this event.
 		 */
 		proto.target = function(){ return this._a5_target; };
 		
 		/**
 		 * The object that is currently processing this event.
-		 * @name currentTarget
-		 * @return {Object} The object that is currently processing this event.
+		 * @return {a5.Object} The object that is currently processing this event.
 		 */
 		proto.currentTarget = function(){ return this._a5_currentTarget; };
 		
 		/**
 		 * The event type.
-		 * @name type
 		 * @return {String} The event type.
 		 */
 		proto.type = function(){ return this._a5_type; };
 		
 		/**
-		 * @name data
+		 * The data object passed along with the event dispatch, if present.
 		 * @return {Object}
 		 */
 		proto.data = function(){ return this._a5_data; };
 		
 		/**
 		 * The phase this event is currently in. (a5.Event.CAPTURING, a5.Event.AT_TARGET, or a5.Event.BUBBLING)
-		 * @name phase
 		 * @return {Number} The phase this event is currently in.
 		 */
 		proto.phase = function(){ return this._a5_phase; };
@@ -89,17 +68,15 @@ a5.Package('a5')
 		
 		/**
 		 * Whether this event should use the bubbling phase.  All events use capture and target phases.
-		 * @name bubbles
 		 */
 		proto.bubbles = function(){ return this._a5_bubbles; };
 		
 		/**
 		 * When shouldRetain is set to true, the event instance will not be destroyed after it has finished being dispatched.
-		 * Thsi defaults to false, and it is highly recommended that you do NOT set this to true unless the same event is being
+		 * This defaults to false, and it is recommended that you do NOT set this to true unless the same event is being
 		 * dispatched on a timer, and the instance can be reused.
 		 * 
-		 * @name shouldRetain
-		 * @param {Boolean} [value=false] If set to true, the event instance will not be destroyed after it has finished being dispatched.
+		 * @param {Boolean} [value] If set to true, the event instance will not be destroyed after it has finished being dispatched.
 		 */
 		proto.shouldRetain = function(value){
 			if(typeof value === 'boolean'){
@@ -112,37 +89,18 @@ a5.Package('a5')
 		proto.dealloc = function(){
 			this._a5_target = this._a5_currentTarget = null;
 		}
-		
-		/**#@-*/
 });
 
 /**
- * @class 
- * @name a5.EventPhase
+ * Defines event phases for an {@link a5.Event}.
  */
 a5.Package('a5')
 
 	.Static('EventPhase', function(EventPhase){
 		
-		/**#@+
-	 	 * @memberOf a5.EventPhase
-		 */
-		
-		/**
-		 * @name CAPTURING
-		 * @constant
-		 */
 		EventPhase.CAPTURING = 1;
 		
-		/**
-		 * @name AT_TARGET
-		 * @constant
-		 */
 		EventPhase.AT_TARGET = 2;
 		
-		/**
-		 * @name BUBBLING
-		 * @constant
-		 */
 		EventPhase.BUBBLING = 3;
 });

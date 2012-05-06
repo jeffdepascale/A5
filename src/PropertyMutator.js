@@ -1,3 +1,7 @@
+
+/**
+ * Applies cross cutting logic to a method to wrap getter and setter like functionality to a property in a Prototype class.
+ */
 a5.Package('a5')
 
 	.Extends('AspectAttribute')

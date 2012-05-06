@@ -1,17 +1,17 @@
 
 /**
- * @class The EventDispatcher class defines a prototype object for handling listeners and dispatching events.
- * <br/><b>Abstract</b>
- * @name a5.EventDispatcher
+ * Handles event listeners and dispatches events.
  */
 a5.Package("a5")
 
-	.Prototype('EventDispatcher', 'abstract', function(proto){
+	.Static(function(EventDispatcher){
 		
-		/**#@+
-	 	 * @memberOf a5.EventDispatcher#
-	 	 * @function
-		 */
+		EventDispatcher.ADD = 'eventDispatcherAdd';
+		
+		EventDispatcher.REMOVE = 'eventDispatcherRemove';
+		
+	})
+	.Prototype('EventDispatcher', 'abstract', function(proto, im, EventDispatcher){
 		
 		this.Properties(function(){
 			this._a5_autoPurge = false;
@@ -22,6 +22,10 @@ a5.Package("a5")
 			
 		}
 		
+		/**
+		 * Returns whether autoPurge is enabled for the dispatcher. If enabled, event listeners will be removed automatically after a valid event is dispatched.
+		 * @param {Boolean} [value] If passed, sets the value for autoPurge.
+		 */
 		proto.autoPurge = function(value){
 			if(typeof value === 'boolean'){
 				this._a5_autoPurge = value;
@@ -31,33 +35,32 @@ a5.Package("a5")
 		}
 		
 		/**
-		 * Adds an event listener to the parent object.
-		 * @name addEventListener
+		 * Adds an event listener to the object.
 		 * @param {String} type The event type to be added.
-		 * @param {Object} method The associated listener method to be added.
+		 * @param {Function} method The associated listener method to be added.
 		 * @param {Boolean} [useCapture=false] If set to true, the listener will process the event in the capture phase.  Otherwise, it will process the event bubbling or target phase.
-		 * @param {Boolean} [scope=null]
+		 * @param {a5.Object} [scope=null] Applies a scope value for the listener method. This is important when listening from a prototype.
 		 */
 		proto.addEventListener = function(type, method, useCapture, scope){
 			this._a5_addEventListener(type, method, useCapture, scope);
 		}
 		
 		/**
-		 * Adds an event listener to the parent object that fires only once, then is removed.
-		 * @name addOneTimeEventListener
+		 * Adds an event listener to the object that fires only once, then is removed.
 		 * @param {String} type The event type to be added.
-		 * @param {Object} method The associated listener method to be added.
+		 * @param {Function} method The associated listener method to be added.
 		 * @param {Boolean} [useCapture=false] If set to true, the listener will process the event in the capture phase.  Otherwise, it will process the event bubbling or target phase.
-		 * @param {Boolean} [scope=null]
+		 * @param {a5.Object} [scope=null] Applies a scope value for the listener method. This is important when listening from a prototype.
 		 */
 		proto.addOneTimeEventListener = function(type, method, useCapture, scope){
 			this._a5_addEventListener(type, method, useCapture, scope, true);
 		}
 		
 		/**
-		 * @name hasEventListener
-		 * @param {String} type
-		 * @param {Object} [method]
+		 * Returns whether the object has a valid listener for the associated type, and optionaly a specified listener method.
+		 * @param {String} type The event type to check.
+		 * @param {Function} [method] A listener method reference.
+		 * @return {Boolean}
 		 */
 		proto.hasEventListener = function(type, method){
 			var types = type.split('|'),
@@ -76,18 +79,19 @@ a5.Package("a5")
 		
 		/**
 		 * Remove a listener from the parent object.
-		 * @name removeEventListener
 		 * @param {String} type The event type to be removed.
-		 * @param {Object} method The associated listener method to be removed.
+		 * @param {Function} method The associated listener method to be removed.
 		 * @param {Boolean} [useCapture=false] Whether the listener to remove is bound to the capture phase or the bubbling phase.
+		 * @param {a5.Object} [scope]
+		 * @param {Boolean} [isOneTime=false]
 		 */
-		proto.removeEventListener = function(type, method,  $useCapture, $scope, $isOneTime){
-			var scope = $scope || null,
-				types = type.split('|'),
-				isOneTime = $isOneTime || false,
-				useCapture = $useCapture === true,
+		proto.removeEventListener = function(type, method,  useCapture, scope, isOneTime){
+			var types = type.split('|'),
 				shouldPush = true,
 				i, l, listArray, j, m;
+			scope = scope || null;
+			isOneTime = isOneTime || false;
+			useCapture = useCapture === true;
 			for (i = 0, l = types.length; i < l; i++) {
 				listArray = this._a5_getListenerArray(types[i]);
 				if (listArray) {
@@ -105,14 +109,14 @@ a5.Package("a5")
 						type: types.length > 1 ? types:types[0],
 						method: method,
 						useCapture: useCapture,
-						changeType: 'REMOVE'
+						changeType: EventDispatcher.REMOVE
 					});
 				}
 			}
 		}
 		
 		/**
-		 * @name removeAllListeners
+		 * Removes all existing listeners.
 		 */
 		proto.removeAllListeners = function(){
 			if(this._a5_listeners)
@@ -121,7 +125,6 @@ a5.Package("a5")
 		
 		/**
 		 * Returns the total number of listeners attached to the parent object.
-		 * @name getTotalListeners
 		 */
 		proto.getTotalListeners = function(type){
 			if (typeof type === 'string') {
@@ -140,7 +143,6 @@ a5.Package("a5")
 		
 		/**
 		 * Sends an event object to listeners previously added to the event chain. By default an event object with a target property is sent pointing to the sender. If a custom object is sent with a target property, this property will not be overridden.
-		 * @name dispatchEvent
 		 * @param {String|a5.Event} event The event object to dispatch.  Or, if a string is passed, the 'type' parameter of the event to dispatch. 
 		 */
 		proto.dispatchEvent = function(event, data, bubbles){
@@ -154,11 +156,10 @@ a5.Package("a5")
 		
 		/**
 		 * Override this method to be notified of listener addition or removal.
-		 * @name eListenersChange
 		 * @param {Object} e The event object
 		 * @param {String} e.type - The event type associated with the change.
 		 * @param {Object} e.method - The listener method associated with the change.
-		 * @param {String} e.changeType - Specifies what the type the change was, either 'ADD' or 'REMOVE'. 
+		 * @param {String} e.changeType - Specifies what the type the change was, either EventDispatcher.ADD or EventDispatcher.REMOVE. 
 		 */
 		proto.eListenersChange = function(e){}
 		
@@ -197,7 +198,7 @@ a5.Package("a5")
 				this.eListenersChange({
 					type: types.length > 1 ? types : types[0],
 					method: method,
-					changeType: 'ADD'
+					changeType: EventDispatcher.ADD
 				});
 			} else
 				throw 'invalid listener: type- ' + type + ', method- ' + method;

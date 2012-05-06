@@ -1,8 +1,6 @@
 
 /**
- * @class 
- * @name a5.AssertException
- * @extends a5.Error
+ * Exceptions thrown from assert statements.
  */
 a5.Package('a5')
 	.Extends('Error')
@@ -16,9 +14,7 @@ a5.Package('a5')
 });
 
 /**
- * @class 
- * @name a5.ContractException
- * @extends a5.Error
+ * Exceptions thrown from contract attributes.
  */
 a5.Package('a5')
 	.Extends('Error')

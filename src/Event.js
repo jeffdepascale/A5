@@ -11,16 +11,28 @@ a5.Package('a5')
 	})
 	.Prototype('Event', function(proto){
 		
-		proto.Event = function($type, $bubbles, $data){
-			this._a5_type = $type;
-			this._a5_data = $data;
+		this.Properties(function(){
+			this._a5_type = null;
+			this._a5_data = null;
 			this._a5_target = null;
 			this._a5_currentTarget = null;
 			this._a5_phase = 1;
-			this._a5_bubbles = $bubbles !== false;
+			this._a5_bubbles = false;
 			this._a5_canceled = false;
 			this._a5_cancelPending = false;
 			this._a5_shouldRetain = false;
+		})
+		
+		/**
+		 * 
+		 * @param {String} type The type identifier for the event.
+		 * @param {Boolean} [bubbles=false] Whether or not the event should use the bubbling phase.
+		 * @param {Object} [data] an optional data object to pass along with the event to registered listeners.
+		 */
+		proto.Event = function(type, bubbles, data){
+			this._a5_type = type;
+			this._a5_data = data || null;
+			this._a5_bubbles = bubbles !== false;
 		}
 		
 		

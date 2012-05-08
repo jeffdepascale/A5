@@ -435,9 +435,6 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 				Properties: function(propFunc){
 					obj.prototype.constructor._a5_mixinProps = propFunc;
 				},
-				Contract:function(contract, method){
-					return a5.core.contracts.createContract(contract, method);
-				},
 				MustExtend:function(){
 					obj.prototype.constructor._a5_mixinMustExtend = arguments;
 				},

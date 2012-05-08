@@ -112,9 +112,10 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 					callback = function(_args){
 						processCB.call(this, _args || args, isAfter, beforeArgs);	
 					}	
-					ret = attrClasses[id].cls.around(attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, beforeArgs);
+					var argsObj = a5.Create(a5.AspectCallArguments, [attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, beforeArgs]);
+					ret = attrClasses[id].cls.around(argsObj);
 					if(ret === a5.AspectAttribute.NOT_IMPLEMENTED)
-						ret = attrClasses[id].cls[(isAfter ? "after" : "before")](attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, beforeArgs);
+						ret = attrClasses[id].cls[(isAfter ? "after" : "before")](argsObj);
 					else
 						isAround = true;
 				if (ret !== null && ret !== undefined) {

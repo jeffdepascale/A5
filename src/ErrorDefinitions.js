@@ -35,7 +35,7 @@ a5.SetNamespace('a5.ErrorDefinitions', {
 	308:'Error processing attribute "{prop}", "{method}" must return a value.',
 	
 	//400: mixins
-	400:'invalid scope argument passed to superclass constructor on class "{nm}".',
+	400:'Mixin "{mixinNM}" requires mixing object "{instNM}" to extend class "{clsNM}" .',
 	401:'Mixin "{nm}" requires owner class to mix "{cls}".',
 	402:'Mixin "{nm}" already mixed into ancestor chain.',
 	403:'Invalid mixin: Method "{method}" defined by more than one specified mixin.',

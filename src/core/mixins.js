@@ -11,7 +11,7 @@ a5.SetNamespace('a5.core.mixins', {
 					for (prop in mixinRef[i]._a5_mixinMustExtend) {
 						cls = mixinRef[i]._a5_mixinMustExtend[prop];
 						if (!inst.doesExtend(a5.GetNamespace(cls, inst.imports())))
-							return a5.ThrowError(400, null, {nm:mixinRef[i].namespace()});
+							return a5.ThrowError(400, null, {mixinNM:mixinRef[i].namespace(), instNM:inst.namespace(), clsNM:cls.namespace()});
 					}
 				}			
 			}						

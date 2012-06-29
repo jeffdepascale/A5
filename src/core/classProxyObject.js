@@ -141,7 +141,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		/**
 		 * @name classPackage
 		 */
-		classPackage:function(){ return this.constructor.classPackage(); },
+		classPackage:function(getObj){ return this.constructor.classPackage(getObj); },
 		
 		/**
 		 * @name className
@@ -260,17 +260,17 @@ a5.SetNamespace('a5.core.classProxyObj',{
 					} else {
 						descenderRef = null;
 					}
-				}
+				}	
 				if(this.constructor._a5_instance === this)
 					this.constructor._a5_instance = null;
 				for(prop in this._a5_ar)
 					delete this._a5_ar[prop];
-				for (prop in this) 
-					if(({}).hasOwnProperty.call(this, prop) 
-					&& typeof this.constructor.prototype[prop] === 'undefined' 
-					&& prop !== '_a5_initialized'
-					&& prop !== '_a5_instanceUID') 
-						this[prop] = null;
+				for (prop in this) {
+					this[prop] = null;
+					delete this[prop];
+				}
+				if(this.__proto__)
+					this.__proto__ = destroyedObj;
 			}
 		},
 		_a5_initialize: function(args){

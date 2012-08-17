@@ -270,7 +270,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 					delete this[prop];
 				}
 				if(this.__proto__)
-					this.__proto__ = destroyedObj;
+					this.__proto__ = a5._a5_destroyedObj;
 			}
 		},
 		_a5_initialize: function(args){

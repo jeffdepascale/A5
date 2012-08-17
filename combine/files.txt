@@ -6,6 +6,7 @@ src/core/classProxyObject.js
 src/core/verifiers.js
 src/core/mixins.js
 src/core/errorHandling.js
+src/Object.js
 src/Attribute.js
 src/Aspect.js
 src/Contract.js

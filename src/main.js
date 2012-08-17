@@ -47,6 +47,8 @@
 		return context;
 	},
 	
+	_a5_destroyedObj = {},
+	
 	TrackWindowStrays = function(){
 		windowItemList = {};
 		for(var prop in window)

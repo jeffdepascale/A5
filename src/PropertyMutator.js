@@ -10,10 +10,10 @@ a5.Package('a5')
 		cls.PropertyMutatorAttribute = function(){
 			cls.superclass(this);
 		}
-		
-		cls.Override.before = function(typeRules, args, scope, method, callback, callOriginator){
-			if(args.length){
-				var typeVal = typeRules[0].validate,
+
+		cls.Override.before = function(aspectArgs){
+			if(aspectArgs.args().length){
+				var typeVal = aspectArgs.rules()[0].validate,
 					isCls = false;
 				if(typeVal){
 					if (typeVal.indexOf('.') !== -1) {
@@ -22,20 +22,20 @@ a5.Package('a5')
 						if(!typeVal)
 							return a5.AspectAttribute.FAILURE;
 					}
-					var isValid = isCls ? (args[0] instanceof typeVal) : (typeof args[0] === typeVal);
+					var isValid = isCls ? (aspectArgs.args()[0] instanceof typeVal) : (typeof aspectArgs.args()[0] === typeVal);
 					if(!isValid)
 						return a5.AspectAttribute.FAILURE;
 				}
-				scope[typeRules[0].property] = args[0];
+				aspectArgs.scope()[aspectArgs.rules()[0].property] = aspectArgs.args()[0];
 				return a5.AspectAttribute.SUCCESS;
 			}
-			var retVal = scope[typeRules[0].property] || null;
+			var retVal = aspectArgs.scope()[aspectArgs.rules()[0].property] || null;
 			return retVal === null || retVal === undefined ? a5.AspectAttribute.RETURN_NULL : retVal;
 		}	
 		
-		cls.Override.after = function(typeRules, args, scope, method, callback, callOriginator, preArgs){
-			if (preArgs.length) 
-				return scope;
+		cls.Override.after = function(aspectArgs){
+			if (aspectArgs.beforeArgs().length) 
+				return aspectArgs.scope();
 			else 				
 				return a5.AspectAttribute.SUCCESS;
 		}

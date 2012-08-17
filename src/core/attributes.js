@@ -59,6 +59,13 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 			attrObj[arr[0].className()] = vals;
 		}
 		
+		if (!isAspect) {
+			if(!method)
+				method = function(){};
+			method._a5_attributes = attrObj;
+			return method;
+		}
+
 		attrObj.wrappedMethod = method;
 			
 		var proxyFunc = function(){

@@ -53,14 +53,17 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		a5.core.mixins.prepareMixins(obj);
 		processMethodChangers(obj);
 		for (prop in obj) {
-			if (({}).hasOwnProperty.call(obj, prop) && typeof obj[prop] === 'function' && a5.core.classProxyObj[prop] === undefined) {
-				if (prop === obj.className()) {
-					obj.constructor._a5_instanceConst = obj[prop];
-					a5.core.reflection.setReflection(stRef, obj, prop, obj.constructor._a5_instanceConst);
-					delete obj[prop];
-				} else {
-					a5.core.reflection.setReflection(stRef, obj, prop);
-				}
+			if (prop !== "Attributes" &&
+				({}).hasOwnProperty.call(obj, prop) && 
+				typeof obj[prop] === 'function' && 
+				(stRef._a5_namespace === 'a5.Object' || a5.core.classProxyObj.instance[prop] === undefined)) {
+					if (prop === obj.className()) {
+						obj.constructor._a5_instanceConst = obj[prop];
+						a5.core.reflection.setReflection(stRef, obj, prop, obj.constructor._a5_instanceConst);
+						delete obj[prop];
+					} else {
+						a5.core.reflection.setReflection(stRef, obj, prop);
+					}
 			}
 		}
 		delete obj.Final;

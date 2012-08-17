@@ -51,7 +51,7 @@ a5.Package('a5')
 		 * Override to specify logic that should occur both before and after the attributed method block is executed.
 		 * @param {a5.AspectCallArguments} Arguments for the context of the aspect;
 		 */
-		cls.around = function(){ return Asp.ctAttribute.NOT_IMPLEMENTED; }
+		cls.around = function(){ return AspectAttribute.NOT_IMPLEMENTED; }
 });
 
 a5.Package('a5')

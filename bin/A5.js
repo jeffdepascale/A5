@@ -48,6 +48,8 @@
 		return context;
 	},
 	
+	_a5_destroyedObj = {},
+	
 	TrackWindowStrays = function(){
 		windowItemList = {};
 		for(var prop in window)
@@ -214,6 +216,13 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 			attrObj[arr[0].className()] = vals;
 		}
 		
+		if (!isAspect) {
+			if(!method)
+				method = function(){};
+			method._a5_attributes = attrObj;
+			return method;
+		}
+
 		attrObj.wrappedMethod = method;
 			
 		var proxyFunc = function(){
@@ -267,9 +276,10 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 					callback = function(_args){
 						processCB.call(this, _args || args, isAfter, beforeArgs);	
 					}	
-					ret = attrClasses[id].cls.around(attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, beforeArgs);
+					var argsObj = a5.Create(a5.AspectCallArguments, [attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, beforeArgs]);
+					ret = attrClasses[id].cls.around(argsObj);
 					if(ret === a5.AspectAttribute.NOT_IMPLEMENTED)
-						ret = attrClasses[id].cls[(isAfter ? "after" : "before")](attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, beforeArgs);
+						ret = attrClasses[id].cls[(isAfter ? "after" : "before")](argsObj);
 					else
 						isAround = true;
 				if (ret !== null && ret !== undefined) {
@@ -439,14 +449,17 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		a5.core.mixins.prepareMixins(obj);
 		processMethodChangers(obj);
 		for (prop in obj) {
-			if (({}).hasOwnProperty.call(obj, prop) && typeof obj[prop] === 'function' && a5.core.classProxyObj[prop] === undefined) {
-				if (prop === obj.className()) {
-					obj.constructor._a5_instanceConst = obj[prop];
-					a5.core.reflection.setReflection(stRef, obj, prop, obj.constructor._a5_instanceConst);
-					delete obj[prop];
-				} else {
-					a5.core.reflection.setReflection(stRef, obj, prop);
-				}
+			if (prop !== "Attributes" &&
+				({}).hasOwnProperty.call(obj, prop) && 
+				typeof obj[prop] === 'function' && 
+				(stRef._a5_namespace === 'a5.Object' || a5.core.classProxyObj.instance[prop] === undefined)) {
+					if (prop === obj.className()) {
+						obj.constructor._a5_instanceConst = obj[prop];
+						a5.core.reflection.setReflection(stRef, obj, prop, obj.constructor._a5_instanceConst);
+						delete obj[prop];
+					} else {
+						a5.core.reflection.setReflection(stRef, obj, prop);
+					}
 			}
 		}
 		delete obj.Final;
@@ -1099,7 +1112,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		/**
 		 * @name classPackage
 		 */
-		classPackage:function(){ return this.constructor.classPackage(); },
+		classPackage:function(getObj){ return this.constructor.classPackage(getObj); },
 		
 		/**
 		 * @name className
@@ -1218,17 +1231,17 @@ a5.SetNamespace('a5.core.classProxyObj',{
 					} else {
 						descenderRef = null;
 					}
-				}
+				}	
 				if(this.constructor._a5_instance === this)
 					this.constructor._a5_instance = null;
 				for(prop in this._a5_ar)
 					delete this._a5_ar[prop];
-				for (prop in this) 
-					if(({}).hasOwnProperty.call(this, prop) 
-					&& typeof this.constructor.prototype[prop] === 'undefined' 
-					&& prop !== '_a5_initialized'
-					&& prop !== '_a5_instanceUID') 
-						this[prop] = null;
+				for (prop in this) {
+					this[prop] = null;
+					delete this[prop];
+				}
+				if(this.__proto__)
+					this.__proto__ = a5._a5_destroyedObj;
 			}
 		},
 		_a5_initialize: function(args){
@@ -1464,7 +1477,7 @@ a5.SetNamespace('a5.core.mixins', {
 					for (prop in mixinRef[i]._a5_mixinMustExtend) {
 						cls = mixinRef[i]._a5_mixinMustExtend[prop];
 						if (!inst.doesExtend(a5.GetNamespace(cls, inst.imports())))
-							return a5.ThrowError(400, null, {nm:mixinRef[i].namespace()});
+							return a5.ThrowError(400, null, {mixinNM:mixinRef[i].namespace(), instNM:inst.namespace(), clsNM:cls.namespace()});
 					}
 				}			
 			}						
@@ -1579,6 +1592,15 @@ a5.SetNamespace('a5.core.errorHandling', true, function(){
 a5.ThrowError = a5.core.errorHandling.ThrowError;
 a5._a5_getThrownError = a5.core.errorHandling._a5_getThrownError;
 
+a5.Package('a5')
+
+	.Prototype('Object', function(cls, im){
+		cls.Object = function(){
+			
+		}	
+})
+
+
 /**
  * Decorates classes and methods with meta information, accessible through reflection.
  */
@@ -1644,7 +1666,7 @@ a5.Package('a5')
 		 * Override to specify logic that should occur both before and after the attributed method block is executed.
 		 * @param {a5.AspectCallArguments} Arguments for the context of the aspect;
 		 */
-		cls.around = function(){ return Asp.ctAttribute.NOT_IMPLEMENTED; }
+		cls.around = function(){ return AspectAttribute.NOT_IMPLEMENTED; }
 });
 
 a5.Package('a5')
@@ -1715,20 +1737,20 @@ a5.Package('a5')
 		cls.ContractAttribute = function(){
 			cls.superclass(this);
 		}
-		
-		cls.Override.before = function(typeRules, args, scope, method, callback){
+
+		cls.Override.before = function(aspectParams){
 			var retObj = null,
 				foundTestRule = false,
 				processError = function(error){
-					error.message = 'Contract type failure on method "' + method.getName() + '" ' + error.message;
+					error.message = 'Contract type failure on method "' + aspectParams.method().getName() + '" ' + error.message;
 					return error;
 				}
 				
 			//TODO: validate structure of passed rules. 
 			//checkIsValid for datatypes, default vals should still fail out via error
-			if(typeRules.length > 1){
-				for (i = 0, l = typeRules.length; i < l; i++) {
-					retObj = runRuleCheck(typeRules[i], args);
+			if(aspectParams.rules().length > 1){
+				for (i = 0, l = aspectParams.rules().length; i < l; i++) {
+					retObj = runRuleCheck(aspectParams.rules()[i], aspectParams.args());
 					if (retObj instanceof a5.ContractException) {
 						cls.throwError(processError(retObj));
 						return a5.AspectAttribute.FAILURE;
@@ -1741,7 +1763,7 @@ a5.Package('a5')
 				}
 			} else {
 				foundTestRule = true;
-				retObj = runRuleCheck(typeRules[0], args, true);
+				retObj = runRuleCheck(aspectParams.rules()[0], aspectParams.args(), true);
 				if (retObj instanceof a5.ContractException) {
 					cls.throwError(processError(retObj));
 					return a5.AspectAttribute.FAILURE;
@@ -1905,10 +1927,10 @@ a5.Package('a5')
 		cls.PropertyMutatorAttribute = function(){
 			cls.superclass(this);
 		}
-		
-		cls.Override.before = function(typeRules, args, scope, method, callback, callOriginator){
-			if(args.length){
-				var typeVal = typeRules[0].validate,
+
+		cls.Override.before = function(aspectArgs){
+			if(aspectArgs.args().length){
+				var typeVal = aspectArgs.rules()[0].validate,
 					isCls = false;
 				if(typeVal){
 					if (typeVal.indexOf('.') !== -1) {
@@ -1917,20 +1939,20 @@ a5.Package('a5')
 						if(!typeVal)
 							return a5.AspectAttribute.FAILURE;
 					}
-					var isValid = isCls ? (args[0] instanceof typeVal) : (typeof args[0] === typeVal);
+					var isValid = isCls ? (aspectArgs.args()[0] instanceof typeVal) : (typeof aspectArgs.args()[0] === typeVal);
 					if(!isValid)
 						return a5.AspectAttribute.FAILURE;
 				}
-				scope[typeRules[0].property] = args[0];
+				aspectArgs.scope()[aspectArgs.rules()[0].property] = aspectArgs.args()[0];
 				return a5.AspectAttribute.SUCCESS;
 			}
-			var retVal = scope[typeRules[0].property] || null;
+			var retVal = aspectArgs.scope()[aspectArgs.rules()[0].property] || null;
 			return retVal === null || retVal === undefined ? a5.AspectAttribute.RETURN_NULL : retVal;
 		}	
 		
-		cls.Override.after = function(typeRules, args, scope, method, callback, callOriginator, preArgs){
-			if (preArgs.length) 
-				return scope;
+		cls.Override.after = function(aspectArgs){
+			if (aspectArgs.beforeArgs().length) 
+				return aspectArgs.scope();
 			else 				
 				return a5.AspectAttribute.SUCCESS;
 		}
@@ -2455,7 +2477,7 @@ a5.SetNamespace('a5.ErrorDefinitions', {
 	308:'Error processing attribute "{prop}", "{method}" must return a value.',
 	
 	//400: mixins
-	400:'invalid scope argument passed to superclass constructor on class "{nm}".',
+	400:'Mixin "{mixinNM}" requires mixing object "{instNM}" to extend class "{clsNM}" .',
 	401:'Mixin "{nm}" requires owner class to mix "{cls}".',
 	402:'Mixin "{nm}" already mixed into ancestor chain.',
 	403:'Invalid mixin: Method "{method}" defined by more than one specified mixin.',

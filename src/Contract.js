@@ -9,20 +9,20 @@ a5.Package('a5')
 		cls.ContractAttribute = function(){
 			cls.superclass(this);
 		}
-		
-		cls.Override.before = function(typeRules, args, scope, method, callback){
+
+		cls.Override.before = function(aspectParams){
 			var retObj = null,
 				foundTestRule = false,
 				processError = function(error){
-					error.message = 'Contract type failure on method "' + method.getName() + '" ' + error.message;
+					error.message = 'Contract type failure on method "' + aspectParams.method().getName() + '" ' + error.message;
 					return error;
 				}
 				
 			//TODO: validate structure of passed rules. 
 			//checkIsValid for datatypes, default vals should still fail out via error
-			if(typeRules.length > 1){
-				for (i = 0, l = typeRules.length; i < l; i++) {
-					retObj = runRuleCheck(typeRules[i], args);
+			if(aspectParams.rules().length > 1){
+				for (i = 0, l = aspectParams.rules().length; i < l; i++) {
+					retObj = runRuleCheck(aspectParams.rules()[i], aspectParams.args());
 					if (retObj instanceof a5.ContractException) {
 						cls.throwError(processError(retObj));
 						return a5.AspectAttribute.FAILURE;
@@ -35,7 +35,7 @@ a5.Package('a5')
 				}
 			} else {
 				foundTestRule = true;
-				retObj = runRuleCheck(typeRules[0], args, true);
+				retObj = runRuleCheck(aspectParams.rules()[0], aspectParams.args(), true);
 				if (retObj instanceof a5.ContractException) {
 					cls.throwError(processError(retObj));
 					return a5.AspectAttribute.FAILURE;

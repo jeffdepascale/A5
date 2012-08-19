@@ -17,7 +17,8 @@ a5.Package('a5.unitTest')
 					'js/tests/EventTest.js',
 					'js/tests/InterfaceTest.js',
 					'js/tests/MethodChangerTest.js',
-					'js/tests/ReflectionTest.js'
+					'js/tests/ReflectionTest.js',
+					'js/tests/DestroyTest.js'
 				]
 			})	
 		}

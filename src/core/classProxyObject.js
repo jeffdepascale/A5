@@ -266,8 +266,12 @@ a5.SetNamespace('a5.core.classProxyObj',{
 				for(prop in this._a5_ar)
 					delete this._a5_ar[prop];
 				for (prop in this) {
-					this[prop] = null;
-					delete this[prop];
+					if(typeof this[prop] == 'function'){
+						this[prop] = a5._a5_destroyedObjFunc;
+					} else {
+						this[prop] = null;
+						delete this[prop];
+					}
 				}
 				if(this.__proto__)
 					this.__proto__ = a5._a5_destroyedObj;

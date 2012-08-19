@@ -47,8 +47,6 @@
 		return context;
 	},
 	
-	_a5_destroyedObj = {},
-	
 	TrackWindowStrays = function(){
 		windowItemList = {};
 		for(var prop in window)
@@ -114,6 +112,17 @@
 		TrackWindowStrays:TrackWindowStrays,
 		
 		GetWindowStrays:GetWindowStrays,
+		
+		_a5_destroyedObj:{},
+		
+		_a5_destroyedObjFunc:function(){
+			var caller = arguments.callee.caller,
+				prefix = "Destroyed method called from";
+			if (caller._a5_methodName !== undefined) 
+				throw prefix + " method '" + caller.getName() + "' in class '" + caller.getClass().className() + "'";
+			else
+				throw prefix + " function '" + caller.toString() + "'";
+		}, 
 		
 		/**
 		 * @name CreateGlobals

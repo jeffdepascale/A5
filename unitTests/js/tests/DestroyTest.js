@@ -22,7 +22,7 @@ a5.Package('a5.unitTest.tests')
 			try {
 				obj.test();
 			} catch(e){
-				debugger;	
+				cls.assert(e == "Destroyed method called from method 'runTest' in class 'DestroyTest'", "destroy method call failure");
 			}
 		}
 		

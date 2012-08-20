@@ -52,7 +52,8 @@ a5.Package('a5.unitTest.tests')
 				.Prototype('ProtoTest3', function(proto, im, ProtoTest){
 					
 					proto.ProtoTest3 = function(){
-						cls.assert(im.CLBase === a5.cl.CLBase, 'Import test 1 failed')
+						cls.assert(im.CLBase === a5.cl.CLBase, 'Import test 1 failed');
+						cls.assert(im().CLBase === a5.cl.CLBase, 'Import test 2 failed');
 					}
 				
 			})

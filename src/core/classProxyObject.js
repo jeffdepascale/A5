@@ -9,7 +9,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		classPackage:function(getObj){ return getObj ? a5.GetNamespace(this._a5_pkg, null, true) : this._a5_pkg; },
 		className:function(){ return this._a5_clsName; },
 		namespace:function(){return this._a5_namespace; },
-		imports:function(){ return this._a5_imports ? this._a5_imports():{}; },
+		imports:function(){ return this._a5_imports() },
 		doesImplement:function(cls){ return a5.core.verifiers.checkImplements(this, cls); },
 		doesExtend:function(cls){ return a5.core.verifiers.checkExtends(this, cls); },
 		doesMix:function(cls){ return a5.core.verifiers.checkMixes(this, cls); },
@@ -48,10 +48,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		isA5:true
 	},
 	instance:{
-		/**#@+
- 		 * @memberOf TopLevel#
- 		 * @function
-	 	 */
+		
 		isA5:true,
 		isA5ClassDef:function(){ return false },
 		

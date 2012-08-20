@@ -1039,17 +1039,6 @@ a5.SetNamespace('a5.core.classProxyObj',{
 			return this.constructor;
 		},
 		
-		autoRelease:function(value){
-			if(value !== undefined){
-				var id = new Date().getTime(),
-					self = this;
-				this._a5_ar[id] = value;
-				return function(){
-					return self._a5_ar[id];
-				}
-			}
-		},
-		
 		/**
 		 * Returns a reference to the parent class of the object. Returns null if calling class is final parent.
 		 * @name superclass
@@ -1243,8 +1232,6 @@ a5.SetNamespace('a5.core.classProxyObj',{
 				}	
 				if(this.constructor._a5_instance === this)
 					this.constructor._a5_instance = null;
-				for(prop in this._a5_ar)
-					delete this._a5_ar[prop];
 				for (prop in this) {
 					if(typeof this[prop] == 'function'){
 						this[prop] = a5._a5_destroyedObjFunc;
@@ -1267,8 +1254,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 				this._a5_instanceUID = this.namespace().replace(/\./g, '_') + '__' + this.constructor.instanceCount();
 				if(this.instanceCount() === 0)
 					this.constructor._a5_instance = this;
-				this.constructor._instanceCount++;	
-				this._a5_ar = {};				
+				this.constructor._instanceCount++;				
 				var self = this,
 					descenderRef = this,
 					_args = args || [],

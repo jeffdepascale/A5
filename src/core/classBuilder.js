@@ -461,7 +461,23 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	
 	_a5_processImports = function(array, pkg, $isRebuild){
 		return (function(array, pkg){
-			var retObj = {},
+			var retObj = function(){
+					if (rebuildArray.length) {
+						var returnObj = {}, 
+							importObj = _a5_processImports(rebuildArray, null, true), 
+							newObj = importObj.retObj, 
+							newRebuildArray = importObj.rebuildArray;
+						
+						for (prop in retObj) 
+							returnObj[prop] = retObj[prop];
+						for (prop in newObj) 
+							if (returnObj[prop] === undefined) 
+								retObj[prop] = returnObj[prop] = newObj[prop];
+						rebuildArray = newRebuildArray;
+						return returnObj;
+					} else
+						return retObj;
+				},
 				isRebuild = $isRebuild || false,
 				rebuildArray = [],
 				i, l,
@@ -474,23 +490,6 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 				}
 			};
 			
-			retObj.rebuild = function(){
-				if (rebuildArray.length) {
-					var returnObj = {}, 
-						importObj = _a5_processImports(rebuildArray, null, true), 
-						newObj = importObj.retObj, 
-						newRebuildArray = importObj.rebuildArray;
-					
-					for (prop in retObj) 
-						returnObj[prop] = retObj[prop];
-					for (prop in newObj) 
-						if (returnObj[prop] === undefined) 
-							retObj[prop] = returnObj[prop] = newObj[prop];
-					rebuildArray = newRebuildArray;
-					return returnObj;
-				} else
-					return retObj;
-			}
 			if(pkg) 
 				processObj(a5.GetNamespace(pkg, null, true));
 			if (array) {
@@ -502,8 +501,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 						pkg = a5.GetNamespace(str.substr(0, str.length - 2), null, true);
 						if(pkg)
 							processObj(pkg);
-						else
-							rebuildArray.push(str);
+						rebuildArray.push(str);
 					} else {
 						clsName = dotIndex > -1 ? str.substr(dotIndex + 1) : str;
 						var obj = a5.GetNamespace(str, null, true);
@@ -543,32 +541,22 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		queuedImplementValidations = [];
 	}
 	
-	return {
-		Create:Create,
-		Package:Package,
-		_a5_processImports:_a5_processImports,
-		_a5_processImports:_a5_processImports,
-		_a5_verifyPackageQueueEmpty:_a5_verifyPackageQueueEmpty,
-		_a5_delayProtoCreation:_a5_delayProtoCreation,
-		_a5_createQueuedPrototypes:_a5_createQueuedPrototypes
-	}
+	/**
+	* @name Create
+	* Instantiates a new instance of an object defined by {@link cl.Package}
+	* @type Object
+	* @param {Object} classRef
+	* @param {Object} args
+	*/
+	a5.Create = Create;
+	/**
+	* @name Package
+	* @param {Object} pkg
+	*/
+	a5.Package = Package;
+	
+	a5._a5_processImports = _a5_processImports;
+	a5._a5_verifyPackageQueueEmpty = _a5_verifyPackageQueueEmpty;
+	a5._a5_delayProtoCreation = _a5_delayProtoCreation;
+	a5._a5_createQueuedPrototypes = _a5_createQueuedPrototypes;
 })
-
-/**
-* @name Create
-* Instantiates a new instance of an object defined by {@link cl.Package}
-* @type Object
-* @param {Object} classRef
-* @param {Object} args
-*/
-a5.Create = a5.core.classBuilder.Create;
-/**
-* @name Package
-* @param {Object} pkg
-*/
-a5.Package = a5.core.classBuilder.Package;
-
-a5._a5_processImports = a5.core.classBuilder._a5_processImports;
-a5._a5_verifyPackageQueueEmpty = a5.core.classBuilder._a5_verifyPackageQueueEmpty;
-a5._a5_delayProtoCreation = a5.core.classBuilder._a5_delayProtoCreation;
-a5._a5_createQueuedPrototypes = a5.core.classBuilder._a5_createQueuedPrototypes;

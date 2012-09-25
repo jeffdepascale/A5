@@ -53,15 +53,15 @@ a5.SetNamespace('a5.core.mixins', {
 		var usedMethods = {},
 			mixins = typeof mixins === 'string' ? [mixins] : mixins,
 			mixinInsts = [],
-			i, l, mixin;
+			i, j, k, l, mixin;
 			
 		for (i = 0, l = mixins.length; i < l; i++) {
 			mixin = a5.GetNamespace(mixins[i], typeof imports === 'function' ? imports() : imports);
 			if(!mixin)
 				return a5.ThrowError(404, null, {mixin:mixins[i]});
 			mixinInsts.push(mixin);
-			for (i = 0; i < sourceObj.constructor._mixinRef.length; i++)
-				if (sourceObj.constructor._mixinRef[i] === mixin)
+			for (j = 0, k=sourceObj.constructor._mixinRef.length; j<k; j++)
+				if (sourceObj.constructor._mixinRef[j] === mixin)
 					return a5.ThrowError(402, null, {nm:mixin.namespace()});
 			for (var method in mixin._mixinDef) {
 				if (method !== 'dealloc' && method !== 'Properties' && method !== 'mixinReady' && method !== 'MustExtend' && method !== 'Contract') {

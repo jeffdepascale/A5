@@ -20,7 +20,7 @@ a5.SetNamespace('a5.core.verifiers', {
 					var func = args.pop();
 					for(var i = 0, l = args.length; i<l; i++){
 						var attr = args[i][0];
-						if(attr === 'Contract' || attr === 'ContractAttribute' || attr === ar.ContractAttribute)
+						if(attr === 'Contract' || attr === 'ContractAttribute' || attr === a5.ContractAttribute)
 							func.attributes = args[i];
 					}
 					return func;

@@ -1,6 +1,7 @@
-(function(){
+(function(global){
 	
-	var windowItemList = null,
+    var globalItemList = null,
+        namespaceResolver = null,
 	
 	GetNamespace = function(namespace, imports, allowGenericReturns){
 		var splitNM, i, l, context;
@@ -10,15 +11,20 @@
 		if(typeof namespace === 'object')
 			return namespace;
 		splitNM = namespace.split('.');
-		context = window;
+		context = global;
 		if(splitNM.length === 1 && imports && imports[namespace])
 			return imports[namespace];
 		for(i= 0, l=splitNM.length; i<l; i++){
 			context = context[splitNM[i]];
 			if(context === undefined) return null;
 		}
-		if(allowGenericReturns || context.namespace !== undefined)
-			return context;
+		if (allowGenericReturns || context.namespace !== undefined)
+		    return context;
+		else if (namespaceResolver) {
+		    var result = namespaceResolver(namespace, imports);
+		    if (result)
+		        return result;
+		}
 		return null;
 	},
 	SetNamespace = function(namespace, arg1, arg2){
@@ -31,14 +37,14 @@
 			object;
 		if(!namespace.match(/^[A-Za-z0-9.]*$/))
 			return a5.ThrowError(100, null, {namespace:namespace});
-		object = splitNM.length ? _af_objectQualifier(splitNM) : window
+		object = splitNM.length ? _af_objectQualifier(splitNM) : global
 		if (object[property] !== undefined)
 			return object[property]; 
 		return object[property] = autoCreate ? new placedObject() : placedObject;
 	},	
 	
 	_af_objectQualifier = function(nmArr){
-		var context = window,
+		var context = global,
 			i, l;
 		for(i = 0, l=nmArr.length; i<l; i++){
 			if(!context[nmArr[i]]) context[nmArr[i]] = {};
@@ -47,22 +53,22 @@
 		return context;
 	},
 	
-	TrackWindowStrays = function(){
-		windowItemList = {};
-		for(var prop in window)
-			windowItemList[prop] = '';
+	TrackGlobalStrays = function(){
+		globalItemList = {};
+		for(var prop in global)
+			globalItemList[prop] = '';
 	},
 	
-	GetWindowStrays = function(purge){
-		if(!windowItemList)
+	GetGlobalStrays = function(purge){
+		if(!globalItemList)
 			a5.ThrowError(101);
 		else {
 			var retList = [], prop
-			for(prop in window)
-				if(windowItemList[prop] === undefined)
+			for(prop in global)
+				if(globalItemList[prop] === undefined)
 					retList.push(prop);
 			if(purge === true)
-				TrackWindowStrays();
+				TrackGlobalStrays();
 			return retList;
 		}	
 	}
@@ -71,7 +77,7 @@
 	 * @name a5
 	 * @namespace Houses all classes and OOP methods in the A5 model. 
 	 */
-	window.a5 = {
+	global.a5 = {
 		/**#@+
 	 	 * @memberOf a5
 	 	 * @function
@@ -109,9 +115,9 @@
 		 */
 		SetNamespace:SetNamespace,
 		
-		TrackWindowStrays:TrackWindowStrays,
+		TrackGlobalStrays:TrackGlobalStrays,
 		
-		GetWindowStrays:GetWindowStrays,
+		GetGlobalStrays:GetGlobalStrays,
 		
 		_a5_destroyedObj:{},
 		
@@ -122,17 +128,24 @@
 				throw prefix + " method '" + caller.getName() + "' in class '" + caller.getClass().className() + "'";
 			else
 				throw prefix + " function '" + caller.toString() + "'";
-		}, 
-		
+		},
+
+		_a5_classCreateHandler:function(){
+		    return classCreateHandler;
+		},
+
 		/**
 		 * @name CreateGlobals
 		 */
 		CreateGlobals:function(){
-			window.Create = a5.Create;
-			window.Package = a5.Package;
-			window.GetNamespace = a5.GetNamespace;
-			window.SetNamespace = a5.SetNamespace;
-			window.ThrowError = a5.ThrowError; 
+			global.Create = a5.Create;
+			global.Package = a5.Package;
+			global.GetNamespace = a5.GetNamespace;
+			global.SetNamespace = a5.SetNamespace;
+			global.ThrowError = a5.ThrowError; 
+		},
+		RegisterNamespaceResolver: function (resolver) {
+		    namespaceResolver = resolver;
 		}
 	}
-})();
+})(this);

@@ -3,6 +3,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	
 	var packageQueue = [],
 		delayProtoCreation = false,
+        classCreateHandler = null,
 		queuedPrototypes = [],
 		queuedImplementValidations = [],
 		prop,
@@ -29,6 +30,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		//else
 			//TODO: throw error, invalid class declaration
 		retObj._a5_initialize(args);
+        if(a5.
 		return retObj;
 	},
 	
@@ -517,28 +519,6 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 				return {retObj:retObj, rebuildArray:rebuildArray};
 			return retObj;
 		})(array, pkg);
-	},
-	
-	_a5_verifyPackageQueueEmpty = function(){
-		if(packageQueue.length){
-			var clsString = '', i, l;
-			for(i = 0, l = packageQueue.length; i < l; i++)
-				clsString += '"' + packageQueue[i].pkg.pkg + '.' + packageQueue[i].pkg.clsName + '", ' + packageQueue[i].reason  + ' class missing: "' + packageQueue[i].reasonNM + '"' + (packageQueue.length > 1 && i < packageQueue.length-1 ? ', \n':'');
-			a5.ThrowError(206, null, {classPlural:packageQueue.length == 1 ? 'class':'classes', clsString:clsString});
-		}
-	},
-	
-	_a5_delayProtoCreation = function(value){
-		delayProtoCreation = value;
-	},
-	
-	_a5_createQueuedPrototypes = function(){
-		for (var i = 0, l = queuedPrototypes.length; i < l; i++)
-			processProtoClass(queuedPrototypes[i]);
-		queuedPrototypes = [];
-		for(i = 0, l = queuedImplementValidations.length; i<l; i++)
-			a5.core.verifiers.validateImplementation(queuedImplementValidations[i].pkgObj, queuedImplementValidations[i].obj); 
-		queuedImplementValidations = [];
 	}
 	
 	/**
@@ -556,7 +536,30 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	a5.Package = Package;
 	
 	a5._a5_processImports = _a5_processImports;
-	a5._a5_verifyPackageQueueEmpty = _a5_verifyPackageQueueEmpty;
-	a5._a5_delayProtoCreation = _a5_delayProtoCreation;
-	a5._a5_createQueuedPrototypes = _a5_createQueuedPrototypes;
+
+	a5._a5_verifyPackageQueueEmpty = function(){
+	    if(packageQueue.length){
+	        var clsString = '', i, l;
+	        for(i = 0, l = packageQueue.length; i < l; i++)
+	            clsString += '"' + packageQueue[i].pkg.pkg + '.' + packageQueue[i].pkg.clsName + '", ' + packageQueue[i].reason  + ' class missing: "' + packageQueue[i].reasonNM + '"' + (packageQueue.length > 1 && i < packageQueue.length-1 ? ', \n':'');
+	        a5.ThrowError(206, null, {classPlural:packageQueue.length == 1 ? 'class':'classes', clsString:clsString});
+	    }
+	}
+	
+	a5._a5_delayProtoCreation = function(value){
+	    delayProtoCreation = value;
+	}
+	
+	a5._a5_createQueuedPrototypes = function(){
+	    for (var i = 0, l = queuedPrototypes.length; i < l; i++)
+	        processProtoClass(queuedPrototypes[i]);
+	    queuedPrototypes = [];
+	    for(i = 0, l = queuedImplementValidations.length; i<l; i++)
+	        a5.core.verifiers.validateImplementation(queuedImplementValidations[i].pkgObj, queuedImplementValidations[i].obj); 
+	    queuedImplementValidations = [];
+	}
+	
+	a5.RegisterClassCreateHandler = function (hndlr) {
+	    classCreateHandler = hndlr;
+	}
 })

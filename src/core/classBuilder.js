@@ -30,7 +30,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		//else
 			//TODO: throw error, invalid class declaration
 		retObj._a5_initialize(args);
-        if(a5.
+		//TODO: class initializer
 		return retObj;
 	},
 	

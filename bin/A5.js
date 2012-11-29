@@ -1,5 +1,5 @@
-//A5, Copyright (c) 2011, Jeff dePascale & Brian Sutliffe. http://www.jeffdepascale.com
-(function( window, undefined ) {(function(global){
+//A5, Copyright (c) 2012, Jeff dePascale http://www.a5js.com
+(function(global) {
 	
     var globalItemList = null,
         namespaceResolver = null,
@@ -85,7 +85,7 @@
 	 * @name a5
 	 * @namespace Houses all classes and OOP methods in the A5 model. 
 	 */
-	global.a5 = {
+	var a5 = global.a5 = {
 		/**#@+
 	 	 * @memberOf a5
 	 	 * @function
@@ -156,7 +156,6 @@
 		    namespaceResolver = resolver;
 		}
 	}
-})(this);
 
 
 a5.SetNamespace('a5.core.reflection', true, function(){
@@ -428,7 +427,6 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	
 	var packageQueue = [],
 		delayProtoCreation = false,
-        classCreateHandler = null,
 		queuedPrototypes = [],
 		queuedImplementValidations = [],
 		prop,
@@ -455,7 +453,6 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		//else
 			//TODO: throw error, invalid class declaration
 		retObj._a5_initialize(args);
-		//TODO: class initializer
 		return retObj;
 	},
 	
@@ -982,10 +979,6 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	    for(i = 0, l = queuedImplementValidations.length; i<l; i++)
 	        a5.core.verifiers.validateImplementation(queuedImplementValidations[i].pkgObj, queuedImplementValidations[i].obj); 
 	    queuedImplementValidations = [];
-	}
-	
-	a5.RegisterClassCreateHandler = function (hndlr) {
-	    classCreateHandler = hndlr;
 	}
 })
 

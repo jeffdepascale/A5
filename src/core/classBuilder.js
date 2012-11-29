@@ -3,7 +3,6 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	
 	var packageQueue = [],
 		delayProtoCreation = false,
-        classCreateHandler = null,
 		queuedPrototypes = [],
 		queuedImplementValidations = [],
 		prop,
@@ -30,7 +29,6 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		//else
 			//TODO: throw error, invalid class declaration
 		retObj._a5_initialize(args);
-		//TODO: class initializer
 		return retObj;
 	},
 	
@@ -557,9 +555,5 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	    for(i = 0, l = queuedImplementValidations.length; i<l; i++)
 	        a5.core.verifiers.validateImplementation(queuedImplementValidations[i].pkgObj, queuedImplementValidations[i].obj); 
 	    queuedImplementValidations = [];
-	}
-	
-	a5.RegisterClassCreateHandler = function (hndlr) {
-	    classCreateHandler = hndlr;
 	}
 })

@@ -1,4 +1,4 @@
-(function(global){
+
 	
     var globalItemList = null,
         namespaceResolver = null,
@@ -84,7 +84,7 @@
 	 * @name a5
 	 * @namespace Houses all classes and OOP methods in the A5 model. 
 	 */
-	global.a5 = {
+	var a5 = global.a5 = {
 		/**#@+
 	 	 * @memberOf a5
 	 	 * @function
@@ -155,4 +155,3 @@
 		    namespaceResolver = resolver;
 		}
 	}
-})(this);

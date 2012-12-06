@@ -241,7 +241,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 					}
 					if (dConst.namespace) {
 						nextRef = dConst.superclass ? dConst.superclass() : null;
-						if (nextRef && nextRef.dealloc !== descenderRef.dealloc) descenderRef.dealloc.call(this);
+						if (nextRef && nextRef.dealloc !== undefined && nextRef.dealloc !== descenderRef.dealloc) descenderRef.dealloc.call(this);
 						descenderRef = nextRef;
 					} else {
 						descenderRef = null;

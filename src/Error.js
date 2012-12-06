@@ -31,7 +31,7 @@ a5.Package('a5')
 				if(error.message && this.message === "")
 					this.message = error.message;
 			} else if(error !== false){
-				try{ 
+				/*try{ 
 					__undefined__();
 				} catch(e) {
 					if (e.stack) {
@@ -58,7 +58,7 @@ a5.Package('a5')
 							} while (context && i <= 50);
 						} catch (e) {}
 					}
-				}
+				}*/
 			}
 		}
 		

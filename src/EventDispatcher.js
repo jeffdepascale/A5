@@ -219,7 +219,7 @@ a5.Package("a5")
 			e._a5_currentTarget = this;
 			if (this._a5_listeners) {
 				var typeArray = this._a5_getListenerArray(e.type()),
-					i, l, thisListener, validPhase;
+					i, l, thisListener, validPhase, validListener;
 				if (typeArray) {
 					for (i = 0, l = typeArray.length; i < l; i++) {
 						thisListener = typeArray ? typeArray[i] : null;

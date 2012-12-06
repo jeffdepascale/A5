@@ -103,7 +103,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		for(prop in obj.Override){
 			if(sc[prop] === undefined && mixinRef[prop] === undefined)
 				return a5.ThrowError(202, null, {prop:prop, namespace:obj.namespace()});
-			if(sc[prop] && sc[prop].Final === true || mixinRef[prop] && mixinRef[prop].Final === true)
+			if(sc[prop] && sc[prop].Final !== undefined && sc[prop].Final === true || mixinRef[prop] && mixinRef[prop].Final !== undefined && mixinRef[prop].Final === true)
 				return a5.ThrowError(203, null, {prop:prop, namespace:obj.namespace()});
 			obj[prop] = obj.Override[prop];
 		}
@@ -493,7 +493,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 			if(pkg) 
 				processObj(a5.GetNamespace(pkg, null, true));
 			if (array) {
-				var str, pkg, clsName;
+				var str, pkg, clsName, isWC, dotIndex;
 				for (i = 0, l = array.length; i < l; i++) {
 					str = array[i], isWC = false, dotIndex = str.lastIndexOf('.');
 					if (str.charAt(str.length - 1) == '*') isWC = true;

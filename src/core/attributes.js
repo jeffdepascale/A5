@@ -183,7 +183,7 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 				return true;
 		}
 		return false;
-	}
+	},
 	
 	applyClassAttribs = function(cls, attribs){
 		var methods = cls.getMethods(),

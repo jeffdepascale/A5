@@ -54,7 +54,6 @@ a5.Package('a5.unitTest.tests')
 					
 					proto.ProtoTest3 = function(){
 						cls.assert(im.CLBase === a5.cl.CLBase, 'Import test 1 failed');
-						cls.assert(im().CLBase === a5.cl.CLBase, 'Import test 2 failed');
 					}
 				
 			})

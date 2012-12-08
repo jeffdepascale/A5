@@ -16,7 +16,7 @@ a5.Package('a5.unitTest.tests')
 			}
 			
 			try {
-				cls.throwError(cls.create(a5.Error, ['error']));
+				throw new a5.Error('error');
 			} catch(e){
 				cls.assert(e instanceof a5.Error, 'a5.Error cast failure');
 				cls.assert(e.message == 'error', 'a5.Error cast message failure');

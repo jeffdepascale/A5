@@ -17,7 +17,7 @@ a5.Package('a5.unitTest.tests')
 					cls.test = function(){}
 			})	
 			
-			var obj = cls.create(a5.unitTest.testClasses.destroys.TestDestroyClass);
+			var obj = new a5.unitTest.testClasses.destroys.TestDestroyClass();
 			obj.destroy();
 			try {
 				obj.test();

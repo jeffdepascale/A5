@@ -12,7 +12,7 @@ a5.SetNamespace('a5.core.verifiers', {
 		for (i = 0, l = pkgObj.implement.length; i<l; i++) {
 			implNM = pkgObj.implement[i];
 			try {
-				testInst = new obj;
+				testInst = new obj('_a5_interfaceTest');
 				testInst.Override = {};
 				testInst.Final = {};
 				testInst.Attributes = function(){

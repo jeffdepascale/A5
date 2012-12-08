@@ -88,7 +88,7 @@ a5.Package('a5.unitTest.tests')
 					}
 			})
 			
-			var inst = cls.create(a5.unitTest.testClasses.MixerTest);
+			var inst = new a5.unitTest.testClasses.MixerTest();
 			cls.assert(inst.mixerProperty == 'mixin set prop val', 'mixerProperty check failure');
 			inst.destroy();
 			

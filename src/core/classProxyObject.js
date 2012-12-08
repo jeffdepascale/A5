@@ -261,50 +261,6 @@ a5.SetNamespace('a5.core.classProxyObj',{
 					this.__proto__ = a5._a5_destroyedObj;
 			}
 		},
-		_a5_initialize: function(args){
-			if (!this._a5_initialized) {
-				if (this.constructor.isAbstract() && this._a5_initialize.caller.caller !== Extend)
-					return a5.ThrowError(216, null, {nm:this.constructor.namespace()});
-				this._a5_initialized = true;
-				if (this.constructor.isSingleton() && this.constructor._a5_instance !== null)
-					return a5.ThrowError(217, null, {nm:this.constructor.namespace()});	
-				this._a5_instanceUID = this.namespace().replace(/\./g, '_') + '__' + this.constructor.instanceCount();
-				if(this.instanceCount() === 0)
-					this.constructor._a5_instance = this;
-				this.constructor._instanceCount++;				
-				var self = this,
-					descenderRef = this,
-					_args = args || [],
-					protoPropRef = [],
-					cs, i, l, mixinRef;
-				
-				this._a5_privatePropsRef = {};
-				if (typeof this.constructor._a5_instanceConst !== 'function')
-					return a5.ThrowError(218, null, {clsName:this.className()});
-				while (descenderRef !== null) {
-					var dConst = descenderRef.constructor;
-					if (dConst._a5_attribs)
-						a5.core.attributes.applyClassAttribs(this, dConst._a5_attribs);
-					if (dConst._a5_protoPrivateProps !== undefined) {
-						this._a5_privatePropsRef[descenderRef.namespace()] = {};
-						dConst._a5_protoPrivateProps.call(this._a5_privatePropsRef[descenderRef.namespace()]);
-					}
-					if(dConst._a5_protoProps !== undefined)
-						protoPropRef.unshift(dConst._a5_protoProps);
-						
-					descenderRef = dConst.superclass && 
-									dConst.superclass().constructor.namespace ? 
-									dConst.superclass() : null;
-				}
-				a5.core.mixins.initializeMixins(this);
-				for(i = 0, l = protoPropRef.length; i<l; i++)
-					protoPropRef[i].call(this);
-				this.constructor._a5_instanceConst.apply(this, _args);
-				a5.core.mixins.mixinsReady(this);
-				return true;
-			} else
-				return null; 
-		},
 		
 		/**
 		 * @name create
@@ -324,7 +280,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		 */
 		assert:function(exp, err){
 			if (exp !== true)
-				throw this.create(a5.AssertException, [err]);
+				throw new a5.AssertException(err);
 		}
 	}
 	

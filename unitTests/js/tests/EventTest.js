@@ -29,7 +29,7 @@ a5.Package('a5.unitTest.tests')
 				cls.testComplete();
 			}
 			
-			var et1 = cls.create(a5.unitTest.testClasses.EventTest1);
+			var et1 = new a5.unitTest.testClasses.EventTest1();
 			et1.addEventListener('TEST_EVENT', eTestEventHandler);
 			et1.testDispatch();
 			

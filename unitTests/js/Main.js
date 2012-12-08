@@ -5,9 +5,8 @@ a5.Package('a5.unitTest')
 	.Class('Main', function(cls){
 		
 		cls.Main = function(){
-			cls.superclass(this);
-			cls.setConfig({
-				dependencies: [
+			cls.superclass(this, arguments);
+			cls.dependencies([
 					'js/lib/CLUnitTest.js',
 					'js/tests/CoreTest.js',
 					'js/tests/AttributesTest.js',
@@ -19,8 +18,7 @@ a5.Package('a5.unitTest')
 					'js/tests/MethodChangerTest.js',
 					'js/tests/ReflectionTest.js',
 					'js/tests/DestroyTest.js'
-				]
-			})	
+				])	
 		}
 })
 

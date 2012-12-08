@@ -5927,7 +5927,7 @@ a5.Package('a5.cl.testing')
 						a5ctx = testFrame.context().a5;
 						a5ctx.cl.CLUnitTest._cl_testRef = self;
 					}
-					var app = testFrame ? a5ctx.cl.instance().applicationPackage() : self.cl().applicationPackage(),
+					var app = testFrame ? a5ctx.cl.Instance().applicationPackage() : self.cl().applicationPackage(),
 						pkg = app['tests'];
 					
 					
@@ -5963,7 +5963,7 @@ a5.Package('a5.cl.testing')
 
 
 				if (testFrame) {
-					var app = testFrame.context().a5.cl.instance();
+					var app = testFrame.context().a5.cl.Instance();
 					if (app) {
 						checkLoadStatus(app);
 					} else {
@@ -6000,7 +6000,7 @@ a5.Package('a5.cl.testing')
 			} else {
 				didFail = false;
 				var testCls = testRef[testCount],
-					ctx = testFrame ? testFrame.context().a5.cl.instance() : self,
+					ctx = testFrame ? testFrame.context().a5.cl.Instance() : self,
 					async;
 				runningTest = ctx.create(testCls.namespace());
 				async = runningTest._cl_async;

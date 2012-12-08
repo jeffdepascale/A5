@@ -39,10 +39,11 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 					}
 					if(!isError && (!clsDef.isA5 || !clsDef.doesExtend(a5.Attribute)))
 						isError = true;
-					else if(clsDef.doesExtend(a5.AspectAttribute))
+					else if(!isError && clsDef.doesExtend(a5.AspectAttribute))
 						isAspect = true;
-					if(isError)
+					if (isError) {
 						return a5.ThrowError(303);
+					}
 				} else {
 					if(t !== 'object' || Object.prototype.toString.call(attr) === '[object Array]')
 						return a5.ThrowError(304);
@@ -119,7 +120,7 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 					callback = function(_args){
 						processCB.call(this, _args || args, isAfter, beforeArgs);	
 					}	
-					var argsObj = a5.Create(a5.AspectCallArguments, [attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, beforeArgs]);
+					var argsObj = new a5.AspectCallArguments(attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, beforeArgs);
 					ret = attrClasses[id].cls.around(argsObj);
 					if(ret === a5.AspectAttribute.NOT_IMPLEMENTED)
 						ret = attrClasses[id].cls[(isAfter ? "after" : "before")](argsObj);
@@ -164,7 +165,7 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 	
 	createAttribs = function(){
 		for(i = 0, l=a5.Attribute._extenderRef.length; i<l; i++)
-			a5.Create(a5.Attribute._extenderRef[i]);
+			new a5.Attribute._extenderRef[i]();
 	},
 	
 	validMName = function(methodName, str){

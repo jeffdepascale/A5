@@ -42,7 +42,7 @@ a5.Package('a5')
 				}
 			}
 			if (!foundTestRule || retObj === false) {
-				cls.throwError(processError(cls.create(a5.ContractException, ['no matching overload found'])));
+				cls.throwError(processError(new a5.ContractException('no matching overload found')));
 				return a5.AspectAttribute.FAILURE;
 			} else {
 				return retObj;
@@ -83,7 +83,7 @@ a5.Package('a5')
 				defaultVal = split[1];
 			} else {
 				if(foundOptionals)
-					return cls.create(a5.ContractException, ['for argument ' + count + ', required values cannot be defined after optional values']);
+					return new a5.ContractException('for argument ' + count + ', required values cannot be defined after optional values');
 			}
 			if(type.indexOf('.') !== -1) kind = 'class';
 			if(type === 'array') kind = 'array';
@@ -91,7 +91,7 @@ a5.Package('a5')
 			if(kind !== 'class') type = type.toLowerCase();
 			if (arg === undefined) {
 				if (foundOptionals) arg = discernDefault(type, kind, defaultVal, count);
-				else return cls.create(a5.ContractException, ['for argument ' + count + ', missing required argument of type "' + type + '"']);
+				else return new a5.ContractException('for argument ' + count + ', missing required argument of type "' + type + '"');
 			}
 	
 			if (arg !== undefined && arg !== null) {
@@ -100,23 +100,23 @@ a5.Package('a5')
 						clsDef = a5.GetNamespace(type);
 						if(clsDef.isInterface()){
 							if(!(arg.doesImplement(clsDef)))
-								return cls.create(a5.ContractException, ['for argument ' + count + ', must implement interface ' + type]);
+								return new a5.ContractException('for argument ' + count + ', must implement interface ' + type);
 						} else {
 							if (!(arg instanceof clsDef))
-								return cls.create(a5.ContractException, ['for argument ' + count + ', must be an instance of type ' + type]);
+								return new a5.ContractException('for argument ' + count + ', must be an instance of type ' + type);
 						}
 						break;
 					case 'type':
 						if(arg !== null && typeof arg !== type)
-							return cls.create(a5.ContractException, ['for argument ' + count + ', must be of type ' + type]);
+							return new a5.ContractException('for argument ' + count + ', must be of type ' + type);
 						break;
 					case 'array':
 						if (Object.prototype.toString.call(arg) !== '[object Array]')
-							return cls.create(a5.ContractException, ['for argument ' + count + ', must be an array']);
+							return new a5.ContractException('for argument ' + count + ', must be an array');
 						break;
 					case 'object':
 						if(arg._a5_initialized !== undefined || typeof arg !== 'object' || arg instanceof Array)
-							return cls.create(a5.ContractException, ['for argument ' + count + ', must be a generic object']);
+							return new a5.ContractException('for argument ' + count + ', must be a generic object');
 						break;
 				}
 			}
@@ -180,7 +180,7 @@ a5.Package('a5')
 			} else
 				invalid = true;
 			if(invalid)
-				return cls.create(a5.ContractException, ['for argument ' + count + ', invalid default value for data type "' + type + '"']);
+				return new a5.ContractException('for argument ' + count + ', invalid default value for data type "' + type + '"');
 			 else 
 			 	return retVal;
 		}

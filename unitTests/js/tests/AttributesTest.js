@@ -1,3 +1,4 @@
+
 a5.Package('a5.unitTest.tests')
 
 	.Extends('a5.cl.CLUnitTest')
@@ -27,7 +28,7 @@ a5.Package('a5.unitTest.tests')
 					
 			})
 			
-			var attrTest = cls.create(a5.unitTest.testClasses.attributes.AttrTest);
+			var attrTest = new a5.unitTest.testClasses.attributes.AttrTest();
 			cls.assert(attrTest.genericAttributeTest.getAttributes()["TestAttribute"] !== null, "Generic Attribute failure.");			
 				
 			a5.Package('a5.unitTest.testClasses.attributes')
@@ -45,7 +46,7 @@ a5.Package('a5.unitTest.tests')
 						cls.assert(typeof args.foo === 'string', "type error fail 1");
 					})
 			})
-			var attrtest1 = cls.create(a5.unitTest.testClasses.attributes.AttrTest1);
+			var attrtest1 = new a5.unitTest.testClasses.attributes.AttrTest1();
 			attrtest1.contractTest("foo");
 			cls.log('AttrTest1 passed');
 			
@@ -75,11 +76,14 @@ a5.Package('a5.unitTest.tests')
 					cls.AttrTest2 = function(){
 					}
 					
+					cls.foo = function(){}
+					
 					cls.method = function(){
 					}
 				});
 			
-			var attrTest2 = cls.create(a5.unitTest.testClasses.attributes.AttrTest2);
+			var attrTest2 = new a5.unitTest.testClasses.attributes.AttrTest2();
+			cls.assert(attrTest2.foo.getAttributes() === null, 'failed');
 			cls.assert(attrTest2.method.getAttributes().TestAspectAttribute !== null, 'failed');
 			attrTest2.method();
 		}

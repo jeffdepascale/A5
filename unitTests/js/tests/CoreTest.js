@@ -1,3 +1,4 @@
+
 a5.Package('a5.unitTest.tests')
 
 	.Extends('a5.cl.CLUnitTest')
@@ -24,7 +25,7 @@ a5.Package('a5.unitTest.tests')
 					}
 				
 			})
-			cls.create(a5.unitTest.testClasses.ProtoTest);
+			new a5.unitTest.testClasses.ProtoTest();
 			
 			
 			
@@ -41,7 +42,7 @@ a5.Package('a5.unitTest.tests')
 					}
 				
 			})
-			cls.create(a5.unitTest.testClasses.ProtoTest2);
+			new a5.unitTest.testClasses.ProtoTest2();
 			
 			
 			//IMPORTS
@@ -57,7 +58,7 @@ a5.Package('a5.unitTest.tests')
 					}
 				
 			})
-			cls.create(a5.unitTest.testClasses.ProtoTest3);
+			new a5.unitTest.testClasses.ProtoTest3();
 			
 			
 			//CONSTRUCTORS
@@ -74,7 +75,7 @@ a5.Package('a5.unitTest.tests')
 			})
 			
 			try {
-				cls.create(a5.unitTest.testClasses.ProtoTest4);
+				new a5.unitTest.testClasses.ProtoTest4();
 			} catch(e){
 				cls.assert(e.message.indexOf('superclass') !== -1, "Invalid superclass call not found");
 			}
@@ -98,7 +99,7 @@ a5.Package('a5.unitTest.tests')
 					}						
 			});
 			
-			cls.create(a5.unitTest.testClasses.ClassTest1);
+			new a5.unitTest.testClasses.ClassTest1();
 			
 			
 			a5.Package('a5.unitTest.testClasses')
@@ -109,9 +110,9 @@ a5.Package('a5.unitTest.tests')
 					}
 			})
 			var singletonFailed = false;
-			cls.create(a5.unitTest.testClasses.SingletonTest);
+			new a5.unitTest.testClasses.SingletonTest();
 			try{
-				cls.create(a5.unitTest.testClasses.SingletonTest);
+				new a5.unitTest.testClasses.SingletonTest();
 			}catch(e){
 				if(e.message.indexOf('singleton') !== -1)
 					singletonFailed = true;

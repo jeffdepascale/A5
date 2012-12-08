@@ -92,7 +92,7 @@ a5.Package('a5.unitTest.tests')
 			
 			try {
 				a5.Package('a5.unitTests.testClasses')
-					
+					.Import('a5.ContractAttribute')
 					.Implements('InterfaceTest2')
 					.Class('FailImplement4', function(cls){
 				
@@ -112,7 +112,7 @@ a5.Package('a5.unitTest.tests')
 			}
 			
 			a5.Package('a5.unitTests.testClasses')
-			
+				.Import('a5.ContractAttribute')
 				.Implements('InterfaceTest2')
 				.Class('SuccessImplement2', function(cls){
 					

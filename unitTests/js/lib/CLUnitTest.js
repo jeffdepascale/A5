@@ -18,7 +18,6 @@ a5.Package('a5.cl')
 		this.Properties(function(){
 			this._cl_async = false;
 		})
-		
 		proto.CLUnitTest = function(){
 			proto.superclass(this);
 		}

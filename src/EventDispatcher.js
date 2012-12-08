@@ -205,7 +205,7 @@ a5.Package("a5")
 		
 		proto._a5_createEvent = function(event, data, bubbles){
 			//if event was passed as a string, create a new Event object
-			var e = (typeof event === 'string') ? a5.Create(a5.Event, [event, bubbles]) : event;
+			var e = (typeof event === 'string') ? new a5.Event(event, bubbles) : event;
 			if(e instanceof a5.Event || e.doesExtend && e.doesExtend(a5.Error)){
 				e._a5_target = this;
 				if(data)
@@ -248,7 +248,7 @@ a5.Package("a5")
 		}
 		
 		proto.dealloc = function(){
-			this.dispatchEvent(a5.Create(a5.Event, [a5.Event.DESTROYED]));
+			this.dispatchEvent(new a5.Event(a5.Event.DESTROYED));
 			this.removeAllListeners();
 			this._a5_listeners = null;
 		}

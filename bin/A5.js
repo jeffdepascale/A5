@@ -981,6 +981,9 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	},
 	
 	_a5_processImports = function(array, pkg, $isRebuild){
+		if(array == undefined)
+			array = [];
+		array.push(pkg + '.*');
 		return (function(array, pkg){
 			var retObj = function(){
 					if (rebuildArray.length) {

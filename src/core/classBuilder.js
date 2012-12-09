@@ -100,9 +100,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 			obj.constructor._a5_superMethods[prop] = (function(method){
 				return function(){
 					var args = [].slice.call(arguments, 1), context = this;
-					return function(){
-						return method.apply(context, args);
-					};
+					return function(){ return method.apply(context, args); };
 				}
 			})(sc[prop]);
 		}
@@ -296,27 +294,31 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		if (!this._a5_initialized) {
 			if (this.constructor.isInterface()) 
 				return a5.ThrowError(208, null, { nm: ref.namespace() });
-			if (this.constructor.isAbstract() && args !== BASE_CONSTRUCT) 
+			if (this.constructor.isAbstract()) 
 				return a5.ThrowError(216, null, { nm: this.constructor.namespace() });
-			if (args !== BASE_CONSTRUCT && this.constructor.isSingleton() && this.constructor._a5_instance !== null) 
+			if (this.constructor.isSingleton() && this.constructor._a5_instance !== null) 
 				return a5.ThrowError(217, null, { nm: this.constructor.namespace() });
 			var self = this, descenderRef = this, _args = args || [], protoPropRef = [], cs, i, l, mixinRef;
-			if(!args !== BASE_CONSTRUCT){
-				this._a5_initialized = true;
-				this._a5_instanceUID = this.namespace().replace(/\./g, '_') + '__' + this.constructor.instanceCount();
-				if (this.instanceCount() === 0) 
-					this.constructor._a5_instance = this;
-				this.constructor._instanceCount++;
-			}
-			var self = this, descenderRef = this, _args = args || [], protoPropRef = [], cs, i, l, mixinRef;
+			this._a5_initialized = true;
+			this._a5_instanceUID = this.namespace().replace(/\./g, '_') + '__' + this.constructor.instanceCount();
+			if (this.instanceCount() === 0) 
+				this.constructor._a5_instance = this;
+			this.constructor._instanceCount++;
+			var self = this, descenderRef = this, _args = args || [], protoPropRef = [], cs, i, l, mixinRef; 
 			
-			this.Super = (function(self){
-				var obj = {};
-				for (var prop in self.constructor._a5_superMethods)
-					obj[prop] = self.constructor._a5_superMethods[prop].call(self);
-				return obj;
+			(function(self){
+				self.Super = function(){
+					if (!self.constructor._a5_superclass.className)
+						return a5.ThrowError(210);
+					var sclConst = self.constructor._a5_superclass.prototype.constructor._a5_instanceConst;
+					if (sclConst) 
+						sclConst.apply(self, arguments);
+					else a5.ThrowError(211, null, {nm:self.constructor._a5_superclass.className()});
+				};			
+				for (var prop in self.constructor._a5_superMethods) 
+					self.Super[prop] = self.constructor._a5_superMethods[prop].call(self);
 			})(this);
-			if (args !== BASE_CONSTRUCT && typeof this.constructor._a5_instanceConst !== 'function') 
+			if (typeof this.constructor._a5_instanceConst !== 'function') 
 				return a5.ThrowError(218, null, { clsName: this.className() });
 			while (descenderRef !== null) {
 				var dConst = descenderRef.constructor;
@@ -331,12 +333,10 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 			a5.core.mixins.initializeMixins(this);
 			for (i = 0, l = protoPropRef.length; i < l; i++) 
 				protoPropRef[i].call(this);
-			if (args !== BASE_CONSTRUCT) {
-				if (args == FROM_CREATE) 
-					this.constructor._a5_instanceConst.apply(this, createArgs);
-				else 
-					this.constructor._a5_instanceConst.apply(this, arguments);
-			}
+			if (args == FROM_CREATE) 
+				this.constructor._a5_instanceConst.apply(this, createArgs);
+			else 
+				this.constructor._a5_instanceConst.apply(this, arguments);
 			a5.core.mixins.mixinsReady(this);
 		}
 	},
@@ -367,7 +367,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 				var self = this;
 				if (this.constructor._a5_clsDef) 
 					processDeclaration(this.constructor._a5_clsDef, this, this, this.constructor.imports(), this.constructor);
-				if(args !== INTERFACE_TEST)
+				if(args !== INTERFACE_TEST && args !== BASE_CONSTRUCT)
 					Initialize.apply(this, arguments);
 			}
 		

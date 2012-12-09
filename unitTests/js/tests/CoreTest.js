@@ -5,7 +5,7 @@ a5.Package('a5.unitTest.tests')
 	.Class('CoreTest', function(cls, im){
 		
 		cls.CoreTest = function(){
-			cls.superclass(this);
+			cls.Super();
 		}		
 		
 		cls.Override.runTest = function(){
@@ -126,7 +126,7 @@ a5.Package('a5.unitTest.tests')
 				.Class('SuperCallTest', function(cls){
 					
 					cls.SuperCallTest = function(){
-						
+						cls.Super();
 					}
 					
 					cls.Override.plugins = function(){

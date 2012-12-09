@@ -4,6 +4,8 @@ a5.Package('a5.unitTest.tests')
 	.Extends('a5.cl.CLUnitTest')
 	.Class('AttributesTest', function(cls, im){
 		
+		var testCls = cls;
+		
 		cls.AttributesTest = function(){
 			cls.superclass(this);
 		}
@@ -43,7 +45,7 @@ a5.Package('a5.unitTest.tests')
 					cls.contractTest = this.Attributes(
 					['Contract', {foo:'string', bar:'boolean=false'}],
 					function(args){
-						cls.assert(typeof args.foo === 'string', "type error fail 1");
+						testCls.assert(typeof args.foo === 'string', "type error fail 1");
 					})
 			})
 			var attrtest1 = new a5.unitTest.testClasses.attributes.AttrTest1();

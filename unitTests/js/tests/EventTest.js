@@ -24,6 +24,7 @@ a5.Package('a5.unitTest.tests')
 					}
 						
 			})
+			
 			var eTestEventHandler = function(e){
 				cls.assert(e.type() === 'TEST_EVENT', 'event type failure');
 				cls.testComplete();

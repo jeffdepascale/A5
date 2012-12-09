@@ -1,8 +1,6 @@
 
 
 (function(global) {
-
-var a5 = global.a5;
 a5.SetNamespace('a5.cl', true, function(){
 
     var initializer = null,
@@ -38,7 +36,7 @@ a5.SetNamespace('a5.cl', true, function(){
                  if (callback && typeof callback === 'function')
                      CreateCallback(callback);
                  var initializeComplete = function () {
-                    inst = a5.Create(a5.cl.CL, [props || {}, initializer]);
+                    inst = new a5.cl.CL(props || {}, initializer);
                     for (var i = 0, l = createCallbacks.length; i < l; i++)
                         createCallbacks[i](inst);
                     createCallbacks = null;
@@ -140,10 +138,6 @@ a5.Package('a5.cl')
 			else
 				if ('console' in window) 
 					console.warn.apply(console, arguments);
-		}
-		
-		proto.Override.throwError = function(error){
-			proto.superclass().throwError(error, a5.cl.CLError);
 		}
 		
 		/**
@@ -504,7 +498,7 @@ a5.Package('a5.cl.core')
 					
 			}
 			a5.cl.PluginConfig = function(){
-				self.throwError(self.create(a5.cl.CLError, ['Invalid call to MVC pluginConfig method: method must be called prior to plugin load.']));
+				throw new a5.cl.CLError('Invalid call to MVC pluginConfig method: method must be called prior to plugin load.');
 			}
 		}
 		
@@ -597,7 +591,7 @@ a5.Package('a5.cl.core')
 			clsPath = null;
 			if (cls) {
 				var clsInstance;
-				clsInstance = (cls._a5_instance === null) ? this.create(cls) : cls.instance();
+				clsInstance = (cls._a5_instance === null) ? new cls() : cls.instance();
 				clsInstance._cl_setMVCName(clsName);
 				return clsInstance;
 			} else {
@@ -625,7 +619,7 @@ a5.Package('a5.cl.core')
 				if(liveNamespace && typeof liveNamespace == 'object'){
 					for (var prop in liveNamespace) 
 						if (typeof liveNamespace[prop] === 'function') {
-							var instance = self.create(liveNamespace[prop]);
+							var instance = new liveNamespace(prop);
 							liveNamespace[prop]._cl_isFinal = true;
 							if (namespaceArray[i][0] === 'domains') {
 								instance._name = prop;
@@ -769,7 +763,7 @@ a5.Package('a5.cl.core')
 			}
 			
 			isMax = isMax || false;
-			var versionVal = parseVersionString(a5.version()),
+			var versionVal = parseVersionString(a5.Version()),
 			testVal = parseVersionString(String(val));
 			if (versionVal.major !== testVal.major)
 		        return isMax ? (versionVal.major < testVal.major) : (versionVal.major > testVal.major);
@@ -1266,6 +1260,7 @@ a5.Package("a5.cl.core")
 	})
 	.Extends("a5.cl.CLBase")
 	.Class("DataCache", 'singleton final', function(self, im){
+		
 		var _enabled,
 			cacheKeys,
 			provider;
@@ -1345,6 +1340,8 @@ a5.Package("a5.cl.core")
 	
 	
 });
+
+
 a5.Package("a5.cl.core")
 
 	.Import('a5.cl.CLEvent')
@@ -1354,7 +1351,7 @@ a5.Package("a5.cl.core")
 		var timer,
 		clInstance,
 		interval,
-		evtInstance = a5.Create(im.CLEvent, [im.CLEvent.GLOBAL_UPDATE_TIMER_TICK]);
+		evtInstance = new im.CLEvent(im.CLEvent.GLOBAL_UPDATE_TIMER_TICK);
 		
 		this.GlobalUpdateTimer = function(_interval){
 			self.superclass(this);
@@ -1402,7 +1399,7 @@ a5.Package('a5.cl.core')
 		this.Core = function(params){
 			self.superclass(this); 
 			_params = params;
-			_instantiator = self.create(a5.cl.core.Instantiator, [params.applicationPackage]);
+			_instantiator = new im.Instantiator(params.applicationPackage);
 		}
 			
 		this.instantiator = function(){ return _instantiator; }			
@@ -1421,10 +1418,10 @@ a5.Package('a5.cl.core')
 		
 		this.initializeCore = function($environment, $clientEnvironment){
 			updateLaunchStatus('APPLICATION_INITIALIZING');
-			_globalUpdateTimer = self.create(a5.cl.core.GlobalUpdateTimer, [_params.globalUpdateTimerInterval]);
-			_requestManager = self.create(a5.cl.core.RequestManager, [_params.requestDefaultMethod, _params.requestDefaultContentType]);
-			_pluginManager = self.create(a5.cl.core.PluginManager);
-			_cache = self.create(a5.cl.core.DataCache, [_params.cacheEnabled]);
+			_globalUpdateTimer = new im.GlobalUpdateTimer(_params.globalUpdateTimerInterval);
+			_requestManager = new im.RequestManager(_params.requestDefaultMethod, _params.requestDefaultContentType);
+			_pluginManager = new im.PluginManager();
+			_cache = new im.DataCache(_params.cacheEnabled);
 			updateLaunchStatus('CORE_LOADED');
 			var loadPaths = self.config().dependencies;
 			if(loadPaths.length){
@@ -2339,10 +2336,10 @@ a5.Package("a5.cl")
 
 		cls.CL = function(params, initializer){
 			cls.superclass(this);
-			var main = cls.create(a5.cl.CLMain._extenderRef[0], [params]);
+			var main = new a5.cl.CLMain._extenderRef[0](params);
 			_params = main._cl_params();
 			_initializer = initializer;
-			core = cls.create(a5.cl.core.Core, [_params]);
+			core = new a5.cl.core.Core(_params);
 			_config = a5.cl.core.Utils.mergeObject(core.instantiator().instantiateConfiguration(), params);
 			if (_config.breakOnDestroyedMethods == true) {
 				a5._a5_destroyedObjFunc = Function('debugger;');
@@ -2446,9 +2443,9 @@ a5.Package('a5.cl')
 		proto.CLMain = function(params){
 			proto.superclass(this);
 			if(CLMain._extenderRef.length > 1)
-				return proto.throwError(proto.create(a5.cl.CLError, ['Invalid class "' + this.namespace() + '", a5.cl.CLMain must only be extended by one subclass.']))
+				throw new a5.cl.CLError('Invalid class "' + this.namespace() + '", a5.cl.CLMain must only be extended by one subclass.');
 			if(this.getStatic().instanceCount() > 1)
-				return proto.throwError(proto.create(a5.cl.CLError, ['Invalid duplicate instance of a5.cl.CLMain subclass "' + this.getStatic().namespace() + '"']));
+				throw new a5.cl.CLError('Invalid duplicate instance of a5.cl.CLMain subclass "' + this.getStatic().namespace() + '"');
 			for (var prop in configDefaults)
 				if(params[prop] === undefined)
 					params[prop] = configDefaults[prop];
@@ -2780,7 +2777,7 @@ a5.Package('a5.cl.initializers.dom')
 					if(clErr && e !== "" && e.indexOf(clErr.toString()) !== -1)
 						e = clErr;
 					else
-						e = a5.Create(a5.Error, [e, false]);
+						e = new a5.Error(e, false);
 					if(url) e.url = url;
 					if(line) e.line = line;
 					self.cl().dispatchEvent(im.CLEvent.ERROR_THROWN, e);			
@@ -3299,12 +3296,12 @@ a5.Package('a5.cl.initializers.dom')
 		
 		cls.Override.applicationInitialized = function(inst){
 			inst.addOneTimeEventListener(im.CLEvent.APPLICATION_PREPARED, eAppPreparedHandler);
-			resourceCache = cls.create(im.ResourceCache, [props.cacheTypes || [], 
+			resourceCache = new im.ResourceCache, (props.cacheTypes || [], 
 									props.cacheBreak || false, 
 									props.staggerDependencies || true,
 									props.xhrDependencies || false,
-									props.silentIncludes || false]);
-			envManager = cls.create(im.EnvManager, [inst.environment()]);
+									props.silentIncludes || false);
+			envManager = new im.EnvManager(inst.environment());
 		}
 		
 		var eAppPreparedHandler = function(){
@@ -3467,7 +3464,7 @@ a5.Package('a5.cl.initializers.dom')
 		}
 		
 		cls.Override.initializePlugin = function(){
-			manifestManager = cls.create(im.ManifestManager);
+			manifestManager = new im.ManifestManager();
 		}
 		
 		cls.manifestManager = function(){
@@ -3545,5 +3542,5 @@ a5.Package('a5.cl.initializers.dom')
 		
 });
 
-a5.Create(a5.cl.initializers.dom.DOMInitializer);
+new a5.cl.initializers.dom.DOMInitializer();
 

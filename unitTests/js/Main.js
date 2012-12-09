@@ -21,5 +21,4 @@ a5.Package('a5.unitTest')
 				])	
 		}
 })
-
 a5.cl.CreateApplication();

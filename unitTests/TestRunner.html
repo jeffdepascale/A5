@@ -6002,7 +6002,7 @@ a5.Package('a5.cl.testing')
 				var testCls = testRef[testCount],
 					ctx = testFrame ? testFrame.context().a5.cl.Instance() : self,
 					async;
-				runningTest = ctx.create(testCls.namespace());
+				runningTest = testFrame.context().a5.Create(testCls.namespace());
 				async = runningTest._cl_async;
 				if(async === true)
 					runningTest.addEventListener(im.CLUnitTest.COMPLETE, eTestCompleteHandler);

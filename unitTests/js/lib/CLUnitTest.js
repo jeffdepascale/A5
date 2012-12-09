@@ -18,8 +18,19 @@ a5.Package('a5.cl')
 		this.Properties(function(){
 			this._cl_async = false;
 		})
+		
 		proto.CLUnitTest = function(){
 			proto.superclass(this);
+		}
+		
+		/**
+		 * @name assert
+		 * @param {Object} exp
+		 * @param {Object} err
+		 */
+		proto.assert = function(exp, err){
+			if (exp !== true)
+				throw new a5.AssertException(err);
 		}
 		
 		proto.asyncTest = function(){

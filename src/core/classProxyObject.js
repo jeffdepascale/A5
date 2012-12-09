@@ -9,7 +9,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		classPackage:function(getObj){ return getObj ? a5.GetNamespace(this._a5_pkg, null, true) : this._a5_pkg; },
 		className:function(){ return this._a5_clsName; },
 		namespace:function(){return this._a5_namespace; },
-		imports:function(){ return this._a5_imports() },
+		imports:function(){ return this._a5_imports; },
 		doesImplement:function(cls){ return a5.core.verifiers.checkImplements(this, cls); },
 		doesExtend:function(cls){ return a5.core.verifiers.checkExtends(this, cls); },
 		doesMix:function(cls){ return a5.core.verifiers.checkMixes(this, cls); },
@@ -52,9 +52,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		isA5:true,
 		isA5ClassDef:function(){ return false },
 		
-		getStatic:function(){
-			return this.constructor;
-		},
+		getStatic:function(){ return this.constructor; },
 		
 		/**
 		 * Returns a reference to the parent class of the object. Returns null if calling class is final parent.
@@ -64,17 +62,6 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		 */
 		superclass:function(scope, args){ 
 			return this.constructor.superclass(scope, args); 
-		},	
-		
-		mixins:function(namespace){
-			if (namespace !== undefined)
-				return GetNamespace(namespace, this.imports());
-			else
-				return this.constructor._a5_mixedMethods;
-		},
-		
-		mix:function(cls){
-			a5.core.mixins.applyMixins(this, cls, this.imports(), this);
 		},
 		
 		getAttributes:function(){
@@ -220,11 +207,6 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		 */
 		destroy:function(){
 			if (this._a5_initialized === true) {
-				if ((this.namespace() === 'a5.cl.CL' || this.classPackage().indexOf('a5.cl.core') !== -1) && !this.classPackage() === 'a5.cl.core.viewDef') {
-					a5.ThrowError(215, null, {nm:this.namespace()});
-					return;
-				}
-				this._a5_initialized = false;
 				var descenderRef = this,
 					instanceRef,
 					nextRef,
@@ -249,40 +231,11 @@ a5.SetNamespace('a5.core.classProxyObj',{
 				}	
 				if(this.constructor._a5_instance === this)
 					this.constructor._a5_instance = null;
-				for (prop in this) {
-					if(typeof this[prop] == 'function'){
-						this[prop] = a5._a5_destroyedObjFunc;
-					} else {
-						this[prop] = null;
-						delete this[prop];
-					}
-				}
 				if(this.__proto__)
-					this.__proto__ = a5._a5_destroyedObj;
+					this.__proto__ = null;
+				for (prop in this) 
+						delete this[prop];
 			}
-		},
-		
-		/**
-		 * @name create
-		 * @see a5.Create
-		 */
-		create:a5.Create,
-		
-		throwError: function(){
-			return a5.ThrowError.apply(this, arguments);
-		},
-
-		
-		/**
-		 * @name assert
-		 * @param {Object} exp
-		 * @param {Object} err
-		 */
-		assert:function(exp, err){
-			if (exp !== true)
-				throw new a5.AssertException(err);
 		}
 	}
-	
-	/**#@-*/
 })

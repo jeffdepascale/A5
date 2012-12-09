@@ -9,7 +9,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		FROM_CREATE = '_a5_constructFromCreate', 
 		BASE_CONSTRUCT = "_a5_baseConstruct", 
 		INTERFACE_TEST = '_a5_interfaceTest',
-		watchPkgs = {},
+		watchImports = {},
 		
 	Create = function(classRef, args){
 		var ref, retObj;
@@ -25,57 +25,48 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	}, 
 	
 	updateWatches = function(pkg, clsName, obj){
-		var pkgName = pkg.replace(/\./g, '_');
-		if(watchPkgs[pkgName]){
-			var arr = watchPkgs[pkgName];
+		var i, l, pkgName = pkg.replace(/\./g, '_');
+		if(watchImports[pkgName]){
+			var arr = watchImports[pkgName];
 			for(var i = 0, l = arr.length; i<l; i++)
 				if(!arr[i][clsName])
 					arr[i][clsName] = obj;
 		}
+		if(watchImports[pkgName + "_" + clsName]){
+			var arr = watchImports[pkgName + "_" + clsName];
+			for(i = 0, l = arr.length; i<l; i++)
+				if(!arr[i][clsName])
+					arr[i][clsName] = obj;
+			delete watchImports[pkgName + "_" + clsName];
+		}
 	},
 	
 	processDeclaration = function(owner, scope, obj, imports, stRef, isProto){
-		if (isProto) {
-			scope.Properties = function(propFunc){
-				obj.constructor._a5_protoProps = propFunc;
-			}
-			scope.PrivateProperties = function(propFunc){
-				obj.constructor._a5_protoPrivateProps = propFunc;
-				return function(instance){
-					return instance._a5_privatePropsRef[obj.namespace()];
-				}
-			}
-		}
-		scope.Attributes = function(){
-			return a5.core.attributes.createAttribute.call(obj, scope, arguments);
-		}
+		if (isProto)
+			scope.Properties = function(propFunc){ obj.constructor._a5_protoProps = propFunc; }
+		scope.Attributes = function(){ return a5.core.attributes.createAttribute.call(obj, scope, arguments); }
 		obj.Override = {};
 		obj.Final = {};
 		owner.call(scope, obj, imports, stRef);
 		a5.core.mixins.prepareMixins(obj);
 		processMethodChangers(obj);
+		delete scope.Attributes;	
+		if (isProto)
+			delete scope.Properties;
+		delete obj.Final;
+		delete obj.Override;
 		for (prop in obj) {
-			if (prop !== "Attributes" &&
-			({}).hasOwnProperty.call(obj, prop) &&
+			if (({}).hasOwnProperty.call(obj, prop) &&
 			typeof obj[prop] === 'function' &&
 			(stRef._a5_namespace === 'a5.Object' || a5.core.classProxyObj.instance[prop] === undefined)) {
 				if (prop === obj.className()) {
 					obj.constructor._a5_instanceConst = obj[prop];
 					a5.core.reflection.setReflection(stRef, obj, prop, obj.constructor._a5_instanceConst);
 					delete obj[prop];
-				}
-				else {
+				} else {
 					a5.core.reflection.setReflection(stRef, obj, prop);
 				}
 			}
-		}
-		delete obj.Final;
-		delete obj.Override;
-		delete scope.Attributes;
-		
-		if (isProto) {
-			delete scope.Properties;
-			delete scope.PrivateProperties;
 		}
 	}, 
 	
@@ -88,39 +79,32 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 				if (prop !== 'Final' && prop !== 'Override' && prop !== 'constructor' && prop !== 'prototype' && prop !== 'dealloc' && prop !== '_a5_initialized') {
 					if (sc[prop] && sc[prop].toString().indexOf('[native code]') === -1) {
 						if (sc[prop].Final == true) 
-							return a5.ThrowError(201, null, {
-								prop: prop,
-								namespace: obj.namespace()
-							});
-						return a5.ThrowError(200, null, {
-							prop: prop,
-							namespace: obj.namespace()
-						});
-					}
-					else {
+							return a5.ThrowError(201, null, { prop: prop, namespace: obj.namespace() });
+						return a5.ThrowError(200, null, { prop: prop, namespace: obj.namespace() });
+					} else {
 						var mixMethod = mixinRef[prop];
 						if (mixinRef[prop] !== undefined && mixMethod !== obj[prop]) {
-							return a5.ThrowError(220, null, {
-								prop: prop,
-								namespace: obj.namespace()
-							});
+							return a5.ThrowError(220, null, { prop: prop, namespace: obj.namespace() });
 						}
 					}
 				}
 			}
 		}
+		obj.constructor._a5_superMethods = {};
 		for (prop in obj.Override) {
 			if (sc[prop] === undefined && mixinRef[prop] === undefined) 
-				return a5.ThrowError(202, null, {
-					prop: prop,
-					namespace: obj.namespace()
-				});
+				return a5.ThrowError(202, null, { prop: prop, namespace: obj.namespace() });
 			if (sc[prop] && sc[prop].Final !== undefined && sc[prop].Final === true || mixinRef[prop] && mixinRef[prop].Final !== undefined && mixinRef[prop].Final === true) 
-				return a5.ThrowError(203, null, {
-					prop: prop,
-					namespace: obj.namespace()
-				});
+				return a5.ThrowError(203, null, { prop: prop, namespace: obj.namespace() });
 			obj[prop] = obj.Override[prop];
+			obj.constructor._a5_superMethods[prop] = (function(method){
+				return function(){
+					var args = [].slice.call(arguments, 1), context = this;
+					return function(){
+						return method.apply(context, args);
+					};
+				}
+			})(sc[prop]);
 		}
 		for (prop in obj.Final) {
 			obj[prop] = obj.Final[prop];
@@ -131,183 +115,181 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	Package = function(pkg){
 		var imports, clsName, cls, base, type, proto, implement, mixins, attribs = null, staticMethods = false, isMixin = false, isInterface = false, enumDeclaration = false, isProto = false, 
 			process = function(){
-			var im = _a5_processImports(imports, pkg), pkgObj = {
-				pkg: pkg,
-				imports: imports,
-				clsName: clsName,
-				cls: cls,
-				base: base,
-				attribs: attribs,
-				type: type,
-				proto: proto,
-				implement: implement,
-				mixins: mixins,
-				staticMethods: staticMethods,
-				isInterface: isInterface,
-				isMixin: isMixin,
-				enumDeclaration: enumDeclaration,
-				isProto: isProto
-			}, validationResult = a5.core.verifiers.validateClassDependencies(base, im, mixins, implement, isInterface, isMixin);
-			if (validationResult === true) 
-				processClass(pkgObj);
-			else 
-				packageQueue.push({
-					pkg: pkgObj,
-					reason: validationResult.reason,
-					reasonNM: validationResult.reasonNM
-				});
-			process = Import = Extends = Implements = Static = Interface = Class = Prototype = Mixin = Mix = Enum = null;
-		}, Import = function(){
-			imports = Array.prototype.slice.call(arguments);
-			return {
-				Prototype: Prototype,
-				Static: Static,
-				Mixin: Mixin,
-				Mix: Mix,
-				Extends: Extends,
-				Implements: Implements,
-				Interface: Interface,
-				Class: Class
-			};
-		}, Extends = function(str){
-			base = str;
-			return {
-				Prototype: Prototype,
-				Static: Static,
-				Import: Import,
-				Mix: Mix,
-				Implements: Implements,
-				Interface: Interface,
-				Class: Class
-			};
-		}, Mix = function(){
-			mixins = Array.prototype.slice.call(arguments);
-			return {
-				Prototype: Prototype,
-				Static: Static,
-				Extends: Extends,
-				Implements: Implements,
-				Interface: Interface,
-				Class: Class
-			};
-		}, Implements = function(arr){
-			implement = Array.prototype.slice.call(arguments);
-			return {
-				Prototype: Prototype,
-				Static: Static,
-				Mix: Mix,
-				Import: Import,
-				Extends: Extends,
-				Class: Class
-			};
-		}, Static = function(name, func){
-			if (typeof name === 'string') {
-				clsName = name;
-				staticMethods = func;
-				process();
-			}
-			else {
-				staticMethods = name;
+				pkgObj = {
+					pkg: pkg,
+					imports: processImports(imports, pkg),
+					clsName: clsName,
+					cls: cls,
+					base: base,
+					attribs: attribs,
+					type: type,
+					proto: proto,
+					implement: implement,
+					mixins: mixins,
+					staticMethods: staticMethods,
+					isInterface: isInterface,
+					isMixin: isMixin,
+					enumDeclaration: enumDeclaration,
+					isProto: isProto
+				}, validationResult = a5.core.verifiers.validateClassDependencies(base, pkgObj.imports, mixins, implement, isInterface, isMixin);
+				if (validationResult === true) 
+					processClass(pkgObj);
+				else 
+					packageQueue.push({
+						pkg: pkgObj,
+						reason: validationResult.reason,
+						reasonNM: validationResult.reasonNM
+					});
+				process = Import = Extends = Implements = Static = Interface = Class = Prototype = Mixin = Mix = Enum = null;
+			}, 
+			Import = function(){
+				imports = Array.prototype.slice.call(arguments);
 				return {
 					Prototype: Prototype,
-					Implements: Implements,
-					Mix: Mix,
+					Static: Static,
 					Mixin: Mixin,
+					Mix: Mix,
+					Extends: Extends,
+					Implements: Implements,
+					Interface: Interface,
+					Class: Class
+				};
+			}, 
+			Extends = function(str){
+				base = str;
+				return {
+					Prototype: Prototype,
+					Static: Static,
+					Import: Import,
+					Mix: Mix,
+					Implements: Implements,
+					Interface: Interface,
+					Class: Class
+				};
+			}, 
+			Mix = function(){
+				mixins = Array.prototype.slice.call(arguments);
+				return {
+					Prototype: Prototype,
+					Static: Static,
+					Extends: Extends,
+					Implements: Implements,
+					Interface: Interface,
+					Class: Class
+				};
+			}, 
+			Implements = function(arr){
+				implement = Array.prototype.slice.call(arguments);
+				return {
+					Prototype: Prototype,
+					Static: Static,
+					Mix: Mix,
 					Import: Import,
 					Extends: Extends,
 					Class: Class
 				};
-			}
-		}, Interface = function(str, $cls){
-			clsName = str;
-			cls = $cls;
-			isInterface = true;
-			process();
-		}, Mixin = function(){
-			isMixin = true;
-			var args = Array.prototype.slice.call(arguments);
-			clsName = args[0];
-			for (var i = 1, l = args.length; i < l; i++) {
-				switch (typeof args[i]) {
-					case 'string':
-						type = args[i];
-						break;
-					case 'object':
-						if (Object.prototype.toString.call(args[i]) === '[object Array]') {
-							if (!attribs) 
-								attribs = [];
-							attribs.push(args[i]);
-						}
-						break;
-					case 'function':
-						cls = args[i];
-						break;
+			}, 
+			Static = function(name, func){
+				if (typeof name === 'string') {
+					clsName = name;
+					staticMethods = func;
+					process();
+				} else {
+					staticMethods = name;
+					return {
+						Prototype: Prototype,
+						Implements: Implements,
+						Mix: Mix,
+						Mixin: Mixin,
+						Import: Import,
+						Extends: Extends,
+						Class: Class
+					};
 				}
-			}
-			process();
-		}, Enum = function(name, func){
-			clsName = name;
-			enumDeclaration = func;
-			process();
-		}, Class = function(){
-			var args = Array.prototype.slice.call(arguments);
-			clsName = args[0];
-			for (var i = 1, l = args.length; i < l; i++) {
-				switch (typeof args[i]) {
-					case 'string':
-						type = args[i];
-						break;
-					case 'object':
-						if (Object.prototype.toString.call(args[i]) === '[object Array]') {
-							if (!attribs) 
-								attribs = [];
-							attribs.push(args[i]);
-						}
-						break;
-					case 'function':
-						cls = args[i];
-						break;
+			}, 
+			Interface = function(str, $cls){
+				clsName = str;
+				cls = $cls;
+				isInterface = true;
+				process();
+			}, 
+			Mixin = function(){
+				isMixin = true;
+				var args = Array.prototype.slice.call(arguments);
+				clsName = args[0];
+				for (var i = 1, l = args.length; i < l; i++) {
+					switch (typeof args[i]) {
+						case 'string':
+							type = args[i];
+							break;
+						case 'object':
+							if (Object.prototype.toString.call(args[i]) === '[object Array]') {
+								if (!attribs) 
+									attribs = [];
+								attribs.push(args[i]);
+							}
+							break;
+						case 'function':
+							cls = args[i];
+							break;
+					}
 				}
-			}
-			process();
-		}, Prototype = function(){
-			isProto = true;
-			var args = Array.prototype.slice.call(arguments);
-			clsName = args[0];
-			for (var i = 1, l = args.length; i < l; i++) {
-				switch (typeof args[i]) {
-					case 'string':
-						type = args[i];
-						break;
-					case 'object':
-						if (Object.prototype.toString.call(args[i]) === '[object Array]') {
-							if (!attribs) 
-								attribs = [];
-							attribs.push(args[i]);
-						}
-						break;
-					case 'function':
-						proto = args[i];
-						break;
+				process();
+			}, 
+			Enum = function(name, func){
+				clsName = name;
+				enumDeclaration = func;
+				process();
+			}, 
+			Class = function(){
+				var args = Array.prototype.slice.call(arguments);
+				clsName = args[0];
+				for (var i = 1, l = args.length; i < l; i++) {
+					switch (typeof args[i]) {
+						case 'string':
+							type = args[i];
+							break;
+						case 'object':
+							if (Object.prototype.toString.call(args[i]) === '[object Array]') {
+								if (!attribs) 
+									attribs = [];
+								attribs.push(args[i]);
+							}
+							break;
+						case 'function':
+							cls = args[i];
+							break;
+					}
 				}
+				process();
+			}, 
+			Prototype = function(){
+				isProto = true;
+				var args = Array.prototype.slice.call(arguments);
+				clsName = args[0];
+				for (var i = 1, l = args.length; i < l; i++) {
+					switch (typeof args[i]) {
+						case 'string':
+							type = args[i];
+							break;
+						case 'object':
+							if (Object.prototype.toString.call(args[i]) === '[object Array]') {
+								if (!attribs) 
+									attribs = [];
+								attribs.push(args[i]);
+							}
+							break;
+						case 'function':
+							proto = args[i];
+							break;
+					}
+				}
+				process();
 			}
-			process();
-		}
 		
-		a5.SetNamespace(pkg);
+			a5.SetNamespace(pkg);
 		
-		return {
-			Enum: Enum,
-			Static: Static,
-			Import: Import,
-			Extends: Extends,
-			Mixin: Mixin,
-			Mix: Mix,
-			Implements: Implements,
-			Class: Class,
-			Prototype: Prototype,
-			Interface: Interface
-		};
+			return { Enum: Enum, Static: Static, Import: Import, Extends: Extends, Mixin: Mixin, Mix: Mix, Implements: Implements, Class: Class, Prototype: Prototype, Interface: Interface };
 	}, 
 	
 	Initialize = function(args, createArgs){
@@ -316,26 +298,30 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 				return a5.ThrowError(208, null, { nm: ref.namespace() });
 			if (this.constructor.isAbstract() && args !== BASE_CONSTRUCT) 
 				return a5.ThrowError(216, null, { nm: this.constructor.namespace() });
-			this._a5_initialized = true;
 			if (args !== BASE_CONSTRUCT && this.constructor.isSingleton() && this.constructor._a5_instance !== null) 
 				return a5.ThrowError(217, null, { nm: this.constructor.namespace() });
-			this._a5_instanceUID = this.namespace().replace(/\./g, '_') + '__' + this.constructor.instanceCount();
-			if (this.instanceCount() === 0) 
-				this.constructor._a5_instance = this;
-			this.constructor._instanceCount++;
+			var self = this, descenderRef = this, _args = args || [], protoPropRef = [], cs, i, l, mixinRef;
+			if(!args !== BASE_CONSTRUCT){
+				this._a5_initialized = true;
+				this._a5_instanceUID = this.namespace().replace(/\./g, '_') + '__' + this.constructor.instanceCount();
+				if (this.instanceCount() === 0) 
+					this.constructor._a5_instance = this;
+				this.constructor._instanceCount++;
+			}
 			var self = this, descenderRef = this, _args = args || [], protoPropRef = [], cs, i, l, mixinRef;
 			
-			this._a5_privatePropsRef = {};
+			this.Super = (function(self){
+				var obj = {};
+				for (var prop in self.constructor._a5_superMethods)
+					obj[prop] = self.constructor._a5_superMethods[prop].call(self);
+				return obj;
+			})(this);
 			if (args !== BASE_CONSTRUCT && typeof this.constructor._a5_instanceConst !== 'function') 
 				return a5.ThrowError(218, null, { clsName: this.className() });
 			while (descenderRef !== null) {
 				var dConst = descenderRef.constructor;
 				if (dConst._a5_attribs) 
 					a5.core.attributes.applyClassAttribs(this, dConst._a5_attribs);
-				if (dConst._a5_protoPrivateProps !== undefined) {
-					this._a5_privatePropsRef[descenderRef.namespace()] = {};
-					dConst._a5_protoPrivateProps.call(this._a5_privatePropsRef[descenderRef.namespace()]);
-				}
 				if (dConst._a5_protoProps !== undefined) 
 					protoPropRef.unshift(dConst._a5_protoProps);
 				
@@ -448,8 +434,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		var shouldReprocess = false, i, l;
 		for(i = 0; i < packageQueue.length; i++){
 			var pkgObj = packageQueue[i].pkg,
-				im = _a5_processImports(pkgObj.imports, pkgObj.pkg),
-				validationResult = a5.core.verifiers.validateClassDependencies(pkgObj.base, im, pkgObj.mixins, pkgObj.implement);		
+				validationResult = a5.core.verifiers.validateClassDependencies(pkgObj.base, pkgObj.imports, pkgObj.mixins, pkgObj.implement);		
 			if (validationResult === true){
 				processClass(pkgObj, true);
 				packageQueue.splice(i, 1);
@@ -470,13 +455,12 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	},
 	
 	processClass = function(pkgObj, $fromQueue){
-		var imports = function(){ return _a5_processImports(pkgObj.imports, pkgObj.pkg); },
-			base = (typeof pkgObj.base === 'function') ? pkgObj.base : a5.GetNamespace(pkgObj.base, imports()),
-			obj = Extend(pkgObj.pkg + '.' + pkgObj.clsName, base, pkgObj.cls, pkgObj.type, pkgObj.isInterface, pkgObj.isProto, imports, pkgObj.mixins, pkgObj.attribs),
+		var base = (typeof pkgObj.base === 'function') ? pkgObj.base : a5.GetNamespace(pkgObj.base, pkgObj.imports),
+			obj = Extend(pkgObj.pkg + '.' + pkgObj.clsName, base, pkgObj.cls, pkgObj.type, pkgObj.isInterface, pkgObj.isProto, pkgObj.imports, pkgObj.mixins, pkgObj.attribs),
 			fromQueue = $fromQueue || false,
 			isValid = true, i, l;
 		if(pkgObj.staticMethods)
-			pkgObj.staticMethods(obj, imports());
+			pkgObj.staticMethods(obj, pkgObj.imports);
 		if (pkgObj.proto && delayProtoCreation) {
 			queuedPrototypes.push({obj:obj, pkgObj:pkgObj});
 			if(pkgObj.implement)
@@ -518,7 +502,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		if (pkgObj.isInterface) {
 			obj.interfaceVals = {};
 			if (pkgObj.base !== null && pkgObj.base !== undefined) {
-				var cls = a5.GetNamespace(pkgObj.base, obj.imports());
+				var cls = a5.GetNamespace(pkgObj.base, pkgObj.imports);
 				if (cls.isInterface()) {
 					for (prop in cls.interfaceVals) 
 						if(obj.interfaceVals[prop] === undefined)
@@ -540,7 +524,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 					obj.prototype.constructor._a5_mixinMustMix = arguments;
 				}
 			}
-			pkgObj.cls.call(obj._mixinDef, obj._mixinDef, obj.imports(), obj);
+			pkgObj.cls.call(obj._mixinDef, obj._mixinDef, pkgObj.imports, obj);
 			if(typeof obj._mixinDef[obj.className()] === 'function'){
 				obj._a5_instanceConst = obj._mixinDef[obj.className()];
 				delete obj._mixinDef[obj.className()];
@@ -555,72 +539,41 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		if (!fromQueue) processQueue();
 	},
 	
-	_a5_processImports = function(array, pkg, $isRebuild){
-		if(array == undefined)
-			array = [];
+	processImports = function(array, pkg, $isRebuild){
+		var retObj = {},i, l, str, pkg, clsName, isWC, dotIndex, pkgName, obj;
+		if(array == undefined) array = [];
 		array.push(pkg + '.*');
-		return (function(array, pkg){
-			var retObj = function(){
-					if (rebuildArray.length) {
-						var returnObj = {}, 
-							importObj = _a5_processImports(rebuildArray, null, true), 
-							newObj = importObj.retObj, 
-							newRebuildArray = importObj.rebuildArray;
-						
-						for (prop in retObj) 
-							returnObj[prop] = retObj[prop];
-						for (prop in newObj) 
-							if (returnObj[prop] === undefined) 
-								retObj[prop] = returnObj[prop] = newObj[prop];
-						rebuildArray = newRebuildArray;
-						return returnObj;
-					} else
-						return retObj;
-				},
-				isRebuild = $isRebuild || false,
-				rebuildArray = [],
-				i, l,
-			
-			processObj = function(procObj){
-				var obj;
-				for (prop in procObj) {
-					obj = procObj[prop];
-					if ((typeof obj === 'function' || typeof obj === 'object') && retObj[prop] === undefined) retObj[prop] = obj;
-				}
-			};
-			
-			if(pkg) 
-				processObj(a5.GetNamespace(pkg, null, true));
-			if (array) {
-				var str, pkg, clsName, isWC, dotIndex, pkgName;
-				for (i = 0, l = array.length; i < l; i++) {
-					str = array[i], isWC = false, dotIndex = str.lastIndexOf('.');
-					if (str.charAt(str.length - 1) == '*') isWC = true;
-					if (isWC) {
-						pkgName = str.substr(0, str.length - 2);
-						pkg = a5.GetNamespace(pkgName, null, true);
-						if(pkg)
-							processObj(pkg);
-						var pkgName = pkgName.replace(/\./g, '_');
-						if(!watchPkgs[pkgName])
-							watchPkgs[pkgName] = [];
-						watchPkgs[pkgName].push(retObj);
-						rebuildArray.push(str);
-					} else {
-						clsName = dotIndex > -1 ? str.substr(dotIndex + 1) : str;
-						var obj = a5.GetNamespace(str, null, true);
-						if (obj) {
-							if (retObj[clsName] === undefined)
-								retObj[clsName] = obj;
-						} else
-							rebuildArray.push(str);	
+		for (i = 0, l = array.length; i < l; i++) {
+			str = array[i], isWC = false, dotIndex = str.lastIndexOf('.');
+			if (str.charAt(str.length - 1) == '*') isWC = true;
+			if (isWC) {
+				pkgName = str.substr(0, str.length - 2);
+				pkg = a5.GetNamespace(pkgName, null, true);
+				if (pkg) {
+					for (prop in pkg) {
+						obj = pkg[prop];
+						if ((typeof obj === 'function' || typeof obj === 'object') && retObj[prop] === undefined) retObj[prop] = obj;
 					}
 				}
+				var pkgWatchName = pkgName.replace(/\./g, '_');
+				if(!watchImports[pkgWatchName])
+					watchImports[pkgWatchName] = [];
+				watchImports[pkgWatchName].push(retObj);
+			} else {
+				clsName = dotIndex > -1 ? str.substr(dotIndex + 1) : str;
+				var obj = a5.GetNamespace(str, null, true);
+				if (obj) {
+					if (retObj[clsName] === undefined)
+						retObj[clsName] = obj;
+				} else{
+					var clsWatchName = pkgName.replace(/\./g, '_') + "_" + clsName;
+					if(!watchImports[clsWatchName])
+						watchImports[clsWatchName] = [];
+					watchImports[clsWatchName].push(retObj);
+				}	
 			}
-			if(isRebuild)
-				return {retObj:retObj, rebuildArray:rebuildArray};
-			return retObj;
-		})(array, pkg);
+		}
+		return retObj;
 	}
 	
 	/**
@@ -636,10 +589,6 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	* @param {Object} pkg
 	*/
 	a5.Package = Package;
-	
-	a5._a5_Extend = Extend;
-	
-	a5._a5_processImports = _a5_processImports;
 
 	a5._a5_verifyPackageQueueEmpty = function(){
 	    if(packageQueue.length){

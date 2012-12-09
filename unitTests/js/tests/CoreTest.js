@@ -100,7 +100,6 @@ a5.Package('a5.unitTest.tests')
 			
 			new a5.unitTest.testClasses.ClassTest1();
 			
-			
 			a5.Package('a5.unitTest.testClasses')
 				.Class('SingletonTest', 'singleton', function(cls){
 					
@@ -118,6 +117,24 @@ a5.Package('a5.unitTest.tests')
 			}
 			
 			cls.assert(singletonFailed, 'Singleton test failure');
+			
+			
+			cls.log('Testing super calls...');
+			
+			a5.Package('a5.unitTest.testClasses')
+				.Extends('a5.cl.CLBase')
+				.Class('SuperCallTest', function(cls){
+					
+					cls.SuperCallTest = function(){
+						
+					}
+					
+					cls.Override.plugins = function(){
+						cls.Super.plugins();
+					}
+			})
+			var inst = new a5.unitTest.testClasses.SuperCallTest();
+			inst.plugins();
 			cls.log('Class tests complete.');
 		}
 

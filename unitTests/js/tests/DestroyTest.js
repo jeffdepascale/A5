@@ -19,11 +19,6 @@ a5.Package('a5.unitTest.tests')
 			
 			var obj = new a5.unitTest.testClasses.destroys.TestDestroyClass();
 			obj.destroy();
-			try {
-				obj.test();
-			} catch(e){
-				cls.assert(e == "Destroyed method called from method 'runTest' in class 'DestroyTest'", "destroy method call failure");
-			}
 		}
 		
 });

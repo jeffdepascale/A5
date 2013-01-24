@@ -129,20 +129,21 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 				if (ret !== null && ret !== undefined) {
 					switch(ret){
 						case a5.AspectAttribute.NOT_IMPLEMENTED:
-						case a5.Attribute.SUCCESS:
+						case a5.AspectAttribute.SUCCESS:
 							ret = args;
 							break;
-						case a5.Attribute.ASYNC:
+						case a5.AspectAttribute.ASYNC:
 							isAsync = true;
 							break;
-						case a5.Attribute.RETURN_NULL:
+						case a5.AspectAttribute.RETURN_NULL:
 							ret = null;
 							break;
-						case a5.Attribute.FAILURE:
+						case a5.AspectAttribute.FAILURE:
 							return;
 					}
-				} else
+				} else {
 					return a5.ThrowError(308, null, {prop:prop, method:isAround ? 'around' : (isAfter ? 'after' : 'before')});
+				}
 				count = id+1;
 				if(!isAsync)
 					return processAttribute(count, ret, isAfter, args, beforeArgs);

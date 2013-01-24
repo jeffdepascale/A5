@@ -545,6 +545,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		array.push(pkg + '.*');
 		for (i = 0, l = array.length; i < l; i++) {
 			str = array[i], isWC = false, dotIndex = str.lastIndexOf('.');
+			pkgName = str.substr(0, str.length - 2);
 			if (str.charAt(str.length - 1) == '*') isWC = true;
 			if (isWC) {
 				pkgName = str.substr(0, str.length - 2);
@@ -561,6 +562,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 				watchImports[pkgWatchName].push(retObj);
 			} else {
 				clsName = dotIndex > -1 ? str.substr(dotIndex + 1) : str;
+				pkgName = str.substr(0, dotIndex);
 				var obj = a5.GetNamespace(str, null, true);
 				if (obj) {
 					if (retObj[clsName] === undefined)
@@ -611,4 +613,6 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	        a5.core.verifiers.validateImplementation(queuedImplementValidations[i].pkgObj, queuedImplementValidations[i].obj); 
 	    queuedImplementValidations = [];
 	}
+	
+	a5._a5_processImports = processImports;
 })

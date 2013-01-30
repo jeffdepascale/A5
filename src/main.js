@@ -13,7 +13,7 @@
 				func.apply(self, args);
 		}, delay);
 		return{
-			clear:function(){ clearInterval(intervalInst); }
+			cancel:function(){ clearInterval(intervalInst); }
 		}
 	},
 	

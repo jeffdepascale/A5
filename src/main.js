@@ -3,6 +3,20 @@
     var globalItemList = null,
         namespaceResolver = null,
 	
+	Async = function(func, args, delay, repeat){
+		var self = this,
+			delay = delay || 0,
+			isA5 = this.isA5,
+			method = repeat ? setInterval : setTimeout,
+			intervalInst = method(function(){
+			if(!isA5 || self._a5_initialized)
+				func.apply(self, args);
+		}, delay);
+		return{
+			clear:function(){ clearInterval(intervalInst); }
+		}
+	},
+	
 	GetNamespace = function(namespace, imports, allowGenericReturns){
 		var splitNM, i, l, context;
 		if(!namespace)
@@ -84,11 +98,13 @@
 		Version:function(){ return '0.5.{BUILD_NUMBER}'; },	
 		GetNamespace:GetNamespace,	
 		SetNamespace:SetNamespace,	
+		Async:Async,
 		TrackGlobalStrays:TrackGlobalStrays,
 		GetGlobalStrays:GetGlobalStrays,
 		RegisterNamespaceResolver: function (resolver) { namespaceResolver = resolver; },
 		CreateGlobals:function(){
 			global.Create = a5.Create;
+			global.Async = a5.Async;
 			global.Package = a5.Package;
 			global.GetNamespace = a5.GetNamespace;
 			global.SetNamespace = a5.SetNamespace;

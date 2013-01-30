@@ -144,11 +144,14 @@ a5.Package("a5")
 		 * Sends an event object to listeners previously added to the event chain. By default an event object with a target property is sent pointing to the sender. If a custom object is sent with a target property, this property will not be overridden.
 		 * @param {String|a5.Event} event The event object to dispatch.  Or, if a string is passed, the 'type' parameter of the event to dispatch. 
 		 */
-		proto.dispatchEvent = function(event, data, bubbles){
+		proto.dispatchEvent = function(event, data, bubbles, sync){
 			var e = this._a5_createEvent(event, data, bubbles);
 			//target phase only
 			e._a5_phase = a5.EventPhase.AT_TARGET;
-			this._a5_dispatchEvent(e);
+			if (sync === false)
+				this.async(this._a5_dispatchEvent, [e]);
+			else
+				this._a5_dispatchEvent(e);
 			if(!e.shouldRetain()) e.destroy();
 			e = null;
 		}
@@ -225,7 +228,7 @@ a5.Package("a5")
 						thisListener = typeArray ? typeArray[i] : null;
 						if (e._a5_canceled || !thisListener) return; //if the event has been canceled (or this object has been destroyed), stop executing
 						validPhase = (e.phase() === a5.EventPhase.CAPTURING && thisListener.useCapture) || (e.phase() !== a5.EventPhase.CAPTURING && !thisListener.useCapture), validListener = typeof thisListener.method === 'function' && (thisListener.scope && thisListener.scope.namespace ? thisListener.scope._a5_initialized : true);
-						if (validPhase && validListener) thisListener.method.call(thisListener.scope, e);
+						if (validPhase && validListener && (thisListener.scope == null || thisListener.scope._a5_initialized)) thisListener.method.call(thisListener.scope, e);
 						if (thisListener.isOneTime === true || (!validListener && this._a5_autoPurge)) {
 							typeArray.splice(i, 1);
 							i--;

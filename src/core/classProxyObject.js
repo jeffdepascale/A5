@@ -64,6 +64,10 @@ a5.SetNamespace('a5.core.classProxyObj',{
 			return this.constructor.superclass(scope, args); 
 		},
 		
+		async:function(func, args){
+			return a5.Async.apply(this, arguments);
+		},
+		
 		getAttributes:function(){
 			return this.constructor.getAttributes();
 		},

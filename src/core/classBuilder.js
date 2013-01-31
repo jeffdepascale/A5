@@ -113,7 +113,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 	Package = function(pkg){
 		var imports, clsName, cls, base, type, proto, implement, mixins, attribs = null, staticMethods = false, isMixin = false, isInterface = false, enumDeclaration = false, isProto = false, 
 			process = function(){
-				pkgObj = {
+				var pkgObj = {
 					pkg: pkg,
 					imports: processImports(imports, pkg),
 					clsName: clsName,
@@ -369,6 +369,8 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 					processDeclaration(this.constructor._a5_clsDef, this, this, this.constructor.imports(), this.constructor);
 				if(args !== INTERFACE_TEST && args !== BASE_CONSTRUCT)
 					Initialize.apply(this, arguments);
+				//if(a5.ES5)
+				//	Object.freeze(this);
 			}
 		
 		if (type) {
@@ -387,7 +389,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 					extender.prototype = proxy;
 					proxy = null;	
 				} else
-					extender.prototype = new base(BASE_CONSTRUCT);			
+					extender.prototype = new base(BASE_CONSTRUCT);
 				superclass = base;
 			} else
 				return a5.ThrowError('Cannot extend ' + base.namespace() + ', class marked as final.');

@@ -58,15 +58,14 @@ a5.Package('a5')
 
 	.Class('AspectCallArguments', function(cls, im, AspectCallArguments){
 		
-		var _rules, _args, _scope, _method, _callback, _callOriginator, _beforeArgs;
+		var _rules, _args, _scope, _method, _callback, _beforeArgs;
 		
-		cls.AspectCallArguments = function(rules, args, scope, method, callback, callOriginator, beforeArgs){
+		cls.AspectCallArguments = function(rules, args, scope, method, callback, beforeArgs){
 			_rules = rules;
 			_args = args;
 			_scope = scope;
 			_method = method;
 			_callback = callback;
-			_callOriginator = callOriginator;
 			_beforeArgs = beforeArgs;
 		}
 		
@@ -99,11 +98,6 @@ a5.Package('a5')
 		 * @return {Function}
 		 */
 		cls.callback = function(){ return _callback; }
-		
-		/**
-		 * When accessible, returns the object that made the call to the method.
-		 */
-		cls.callOriginator = function(){ return _callOriginator; }
 		
 		/**
 		 * On after methods and after phase of around methods, returns the args passed to the before chain of the aspect.

@@ -70,23 +70,13 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 		attrObj.wrappedMethod = method;
 			
 		var proxyFunc = function(){
-			var callOriginator,
-				prop,
-				pCaller,
+			var prop,
 				attrClasses = [], 
 				executionScope = this,
-				callOriginator,
 				count = 0;
 			if(method)
 				for(var prop in proxyFunc)
 					method[prop] = proxyFunc[prop];
-			pCaller = proxyFunc.caller;
-			do{
-				if (pCaller.getClassInstance !== undefined)
-					callOriginator = pCaller;
-				else	
-					pCaller = pCaller.caller;
-			} while (pCaller !== null && !callOriginator);
 			for(var i = 0, l = attributes.length; i<l; i++){
 				var cls = attributes[i][0],
 					clsInst = cls.instance(true),
@@ -120,7 +110,7 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 					callback = function(_args){
 						processCB.call(this, _args || args, isAfter, beforeArgs);	
 					}	
-					var argsObj = new a5.AspectCallArguments(attrClasses[id].props, args, executionScope, proxyFunc, callback, callOriginator, beforeArgs);
+					var argsObj = new a5.AspectCallArguments(attrClasses[id].props, args, executionScope, proxyFunc, callback, beforeArgs);
 					ret = attrClasses[id].cls.around(argsObj);
 					if(ret === a5.AspectAttribute.NOT_IMPLEMENTED)
 						ret = attrClasses[id].cls[(isAfter ? "after" : "before")](argsObj);

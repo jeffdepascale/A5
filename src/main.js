@@ -2,6 +2,7 @@
 	
     var globalItemList = null,
         namespaceResolver = null,
+		ES5 = (function(){ "use strict"; return !this; })(),
 	
 	Async = function(func, args, delay, repeat){
 		var self = this,
@@ -97,7 +98,8 @@
 	global.a5 = {
 		Version:function(){ return '0.5.{BUILD_NUMBER}'; },	
 		GetNamespace:GetNamespace,	
-		SetNamespace:SetNamespace,	
+		SetNamespace:SetNamespace,
+		ES5:ES5,	
 		Async:Async,
 		TrackGlobalStrays:TrackGlobalStrays,
 		GetGlobalStrays:GetGlobalStrays,

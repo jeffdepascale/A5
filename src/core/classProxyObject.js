@@ -68,6 +68,10 @@ a5.SetNamespace('a5.core.classProxyObj',{
 			return a5.Async.apply(this, arguments);
 		},
 		
+		cycle:function(){
+			return a5.Cycle.apply(this, arguments);
+		},
+		
 		getAttributes:function(){
 			return this.constructor.getAttributes();
 		},

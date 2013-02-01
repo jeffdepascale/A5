@@ -4,15 +4,40 @@
         namespaceResolver = null,
 		ES5 = (function(){ "use strict"; return !this; })(),
 	
-	Async = function(func, args, delay, repeat){
+	Async = function(func, args, delay, onComplete){
 		var self = this,
 			delay = delay || 0,
 			isA5 = this.isA5,
-			method = repeat ? setInterval : setTimeout,
-			intervalInst = method(function(){
-			if(!isA5 || self._a5_initialized)
-				func.apply(self, args);
-		}, delay);
+			intervalInst = setTimeout(function(){
+				if (!isA5 || self._a5_initialized) {
+					var result = func.apply(self, args);
+					if (onComplete) 
+						onComplete.call(self, result);
+				}
+			}, delay);
+		return{
+			cancel:function(){ clearTimeout(intervalInst); }
+		}
+	},
+	
+	Cycle = function(func, args, interval, maxCycles, onCycle, onComplete){
+		var self = this,
+			isA5 = this.isA5,
+			cycleCount = 0,
+			maxCycles = maxCycles || 0, 
+			intervalInst = setInterval(function(){
+				if (!isA5 || self._a5_initialized) {
+					var result = func.apply(self, args);
+					if (onCycle) 
+						onCycle.call(self, result);
+					cycleCount++;
+					if(cycleCount == maxCycles){
+						clearInterval(intervalInst);
+						if(onComplete)
+							onComplete.call(self, result);
+					}				
+				}
+			}, interval);
 		return{
 			cancel:function(){ clearInterval(intervalInst); }
 		}
@@ -101,12 +126,14 @@
 		SetNamespace:SetNamespace,
 		ES5:ES5,	
 		Async:Async,
+		Cycle:Cycle,
 		TrackGlobalStrays:TrackGlobalStrays,
 		GetGlobalStrays:GetGlobalStrays,
 		RegisterNamespaceResolver: function (resolver) { namespaceResolver = resolver; },
 		CreateGlobals:function(){
 			global.Create = a5.Create;
 			global.Async = a5.Async;
+			global.Cycle = a5.Cycle;
 			global.Package = a5.Package;
 			global.GetNamespace = a5.GetNamespace;
 			global.SetNamespace = a5.SetNamespace;

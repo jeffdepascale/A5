@@ -10,7 +10,7 @@
 			isA5 = this.isA5,
 			intervalInst = setTimeout(function(){
 				if (!isA5 || self._a5_initialized) {
-					var result = func.apply(self, args);
+					var result = func.apply(self, args || []);
 					if (onComplete) 
 						onComplete.call(self, result);
 				}
@@ -27,7 +27,7 @@
 			maxCycles = maxCycles || 0, 
 			intervalInst = setInterval(function(){
 				if (!isA5 || self._a5_initialized) {
-					var result = func.apply(self, args);
+					var result = func.apply(self, args || []);
 					if (onCycle) 
 						onCycle.call(self, result);
 					cycleCount++;

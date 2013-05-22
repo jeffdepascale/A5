@@ -334,7 +334,7 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 			for (i = 0, l = protoPropRef.length; i < l; i++) 
 				protoPropRef[i].call(this);
 			if (args == FROM_CREATE) 
-				this.constructor._a5_instanceConst.apply(this, createArgs);
+				this.constructor._a5_instanceConst.apply(this, createArgs || []);
 			else 
 				this.constructor._a5_instanceConst.apply(this, arguments);
 			a5.core.mixins.mixinsReady(this);

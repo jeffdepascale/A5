@@ -39,19 +39,19 @@ a5.Package('a5')
 		 * Override to specify logic that should occur before the attributed method block is executed.
 		 * @param {a5.AspectCallArguments} Arguments for the context of the aspect;
 		 */
-		cls.before = function(rules, args, scope, method, callback, callOriginator){ return AspectAttribute.NOT_IMPLEMENTED; }
+		cls.before = function(args){ return AspectAttribute.NOT_IMPLEMENTED; }
 		
 		/**
 		 * Override to specify logic that should occur after the attributed method block is executed.
 		 * @param {a5.AspectCallArguments} Arguments for the context of the aspect;
 		 */
-		cls.after = function(rules, args, scope, method, callback, callOriginator, beforeArgs){ return AspectAttribute.NOT_IMPLEMENTED; }
+		cls.after = function(args){ return AspectAttribute.NOT_IMPLEMENTED; }
 		
 		/**
 		 * Override to specify logic that should occur both before and after the attributed method block is executed.
 		 * @param {a5.AspectCallArguments} Arguments for the context of the aspect;
 		 */
-		cls.around = function(){ return AspectAttribute.NOT_IMPLEMENTED; }
+		cls.around = function(args){ return AspectAttribute.NOT_IMPLEMENTED; }
 });
 
 a5.Package('a5')
@@ -88,7 +88,7 @@ a5.Package('a5')
 		cls.scope = function(){ return _scope; }
 		
 		/**
-		 * Returns the definition of the wraped method, accessible for reflection purposes.
+		 * Returns the definition of the wrapped method, accessible for reflection purposes.
 		 * @returns {Function}
 		 */
 		cls.method = function(){ return _method; }

@@ -14,6 +14,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		doesExtend:function(cls){ return a5.core.verifiers.checkExtends(this, cls); },
 		doesMix:function(cls){ return a5.core.verifiers.checkMixes(this, cls); },
 		getAttributes:function(){ return this._a5_attributes; },
+		getExtenders:function(){ return this._extenderRef; },
 		instance:function(autoCreate, args){
 			if (autoCreate === true)
 				return this._a5_instance || a5.Create(this, args);
@@ -86,9 +87,10 @@ a5.SetNamespace('a5.core.classProxyObj',{
 				if((includeInherited || ({}).hasOwnProperty.call(this, prop)) && 
 					typeof(this[prop]) === 'function' && 
 					a5.core.classProxyObj.instance[prop] === undefined && 
+					prop !== "Super" &&
 					prop.substr(0, 4) !== '_a5_' &&
 					(includePrivate || prop.substr(0, 1) !== '_'))
-						retArray.push(prop);
+						retArray.push(this[prop]);
 			return retArray;
 		},
 		getProperties:function(includeInherited, includePrivate){

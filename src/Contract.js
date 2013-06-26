@@ -21,7 +21,7 @@ a5.Package('a5')
 			//TODO: validate structure of passed rules. 
 			//checkIsValid for datatypes, default vals should still fail out via error
 			if(aspectParams.rules().length > 1){
-				for (i = 0, l = aspectParams.rules().length; i < l; i++) {
+				for (var i = 0, l = aspectParams.rules().length; i < l; i++) {
 					retObj = runRuleCheck(aspectParams.rules()[i], aspectParams.args());
 					if (retObj instanceof a5.ContractException) {
 						cls.throwError(processError(retObj));

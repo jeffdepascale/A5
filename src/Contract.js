@@ -23,26 +23,28 @@ a5.Package('a5')
 			if(aspectParams.rules().length > 1){
 				for (var i = 0, l = aspectParams.rules().length; i < l; i++) {
 					retObj = runRuleCheck(aspectParams.rules()[i], aspectParams.args());
-					if (retObj instanceof a5.ContractException) {
-						cls.throwError(processError(retObj));
-						return a5.AspectAttribute.FAILURE;
-					}
+					if (retObj instanceof a5.ContractException)
+					    continue;
 					if (retObj !== false) {
 						foundTestRule = true;
 						retObj.overloadID = i;
 						break;
 					}
 				}
+				if (retObj instanceof a5.ContractException) {
+				    a5.ThrowError(processError(retObj));
+				    return a5.AspectAttribute.FAILURE;
+				}
 			} else {
 				foundTestRule = true;
 				retObj = runRuleCheck(aspectParams.rules()[0], aspectParams.args(), true);
 				if (retObj instanceof a5.ContractException) {
-					cls.throwError(processError(retObj));
+				    a5.ThrowError(processError(retObj));
 					return a5.AspectAttribute.FAILURE;
 				}
 			}
 			if (!foundTestRule || retObj === false) {
-				cls.throwError(processError(new a5.ContractException('no matching overload found')));
+			    a5.ThrowError(processError(new a5.ContractException('no matching overload found')));
 				return a5.AspectAttribute.FAILURE;
 			} else {
 				return retObj;

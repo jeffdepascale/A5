@@ -304,7 +304,6 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 			if (this.instanceCount() === 0) 
 				this.constructor._a5_instance = this;
 			this.constructor._instanceCount++;
-			var self = this, descenderRef = this, _args = args || [], protoPropRef = [], cs, i, l, mixinRef; 
 			
 			(function(self){
 				self.Super = function(){
@@ -418,6 +417,12 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		eProtoConst._a5_instance = null;
 		eProtoConst._instanceCount = 0;
 		eProtoConst._extenderRef = [];
+		if (namespace === 'a5.Object' || base == Error) {
+			eProtoConst._ancestorRef = [];
+		} else {
+			eProtoConst._ancestorRef = base.prototype.constructor._ancestorRef.slice(0);
+			eProtoConst._ancestorRef.push(base.prototype.constructor);
+		} 
 		eProto._a5_initialized = false;
 			
 		for(prop in a5.core.classProxyObj.construct)

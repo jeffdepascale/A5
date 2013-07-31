@@ -181,9 +181,9 @@ a5.SetNamespace('a5.core.attributes', true, function(){
 		var methods = cls.getMethods(),
 			slice = Array.prototype.slice;
 		for (var i = 0, l = methods.length; i < l; i++) {
-			var methodName = methods[i],
-					method = cls[methodName],
-					appliedAttribs = [];
+			var method = methods[i],
+				methodName = method.getName(),
+				appliedAttribs = [];
 			for(var j = 0, k=attribs.length; j<k; j++){	
 				var attr = slice.call(attribs[j]);
 				if (attr.length > 1) {

@@ -30,7 +30,6 @@ a5.SetNamespace('a5.core.verifiers', {
 					obj._a5_clsDef.call(testInst, testInst, obj.imports(), obj);
 			} 
 			catch (e) {
-				throw e;
 				return false;
 			}
 			if (!impl.isInterface())

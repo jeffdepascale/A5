@@ -15,6 +15,7 @@ a5.SetNamespace('a5.core.classProxyObj',{
 		doesMix:function(cls){ return a5.core.verifiers.checkMixes(this, cls); },
 		getAttributes:function(){ return this._a5_attributes; },
 		getExtenders:function(){ return this._extenderRef; },
+		getAncestors:function(){ return this._ancestorRef; },
 		instance:function(autoCreate, args){
 			if (autoCreate === true)
 				return this._a5_instance || a5.Create(this, args);

@@ -495,17 +495,19 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 		if(!isValid)
 			return;
 		if(pkgObj.enumDeclaration){
-			var index = 0,
-				values = [];
+			var startIndex = 0,
+				values = [],
+				index;
 			pkgObj.enumDeclaration({
 				startIndex:function(value){
-					index = value;
+					startIndex = value;
 				},
 				addValue:function(value){
 					values.push(value);
 				}
 			})
 			
+			index = startIndex;
 			for (i = 0, l = values.length; i < l; i++)
 				obj[values[i]] = index++;
 				
@@ -514,10 +516,11 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 					obj[value] = index++;
 			}
 			obj.getValue = function(id){
-				for (prop in obj) 
-					if (obj[prop] === id) 
-						return prop;
-				return null;
+				try {
+					return values[id - startIndex];
+				} catch (e) {
+					return null;
+				}
 			}
 		}
 		if (pkgObj.isInterface) {

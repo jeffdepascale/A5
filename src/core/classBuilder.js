@@ -512,8 +512,10 @@ a5.SetNamespace('a5.core.classBuilder', true, function(){
 				obj[values[i]] = index++;
 				
 			obj.addValue = function(value){
-				if (obj[value] === undefined) 
+				if (obj[value] === undefined) {
 					obj[value] = index++;
+					values.push(value);
+				}
 			}
 			obj.getValue = function(id){
 				try {
